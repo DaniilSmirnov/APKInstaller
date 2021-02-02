@@ -63,7 +63,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 self.drawDevices()
 
             installButton = QtWidgets.QPushButton("Установить")
-            installButton.clicked.connect(lambda state, target=device: self.install(target, name))
+            installButton.clicked.connect(lambda state, target=device, model=name: self.install(target, model))
 
             deviceName.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
             deviceVersion.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
