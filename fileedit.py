@@ -6,6 +6,7 @@ class FileEdit(QtWidgets.QLineEdit):
         super(FileEdit, self).__init__(parent)
 
         self.setDragEnabled(True)
+        self.setPlaceholderText('Помести сюда файл через drag n drop')
 
     def dragEnterEvent(self, event):
         data = event.mimeData()
@@ -20,7 +21,6 @@ class FileEdit(QtWidgets.QLineEdit):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-        global path
         data = event.mimeData()
         url = data.urls()[0]
         path = url.toLocalFile()

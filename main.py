@@ -1,14 +1,10 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTimer
 from ppadb.client import Client as AdbClient
 import sys
 
 from fileedit import FileEdit
 
 client = AdbClient(host="127.0.0.1", port=5037)
-
-path = None
-oldDevices = None
 
 
 class Ui_MainWindow(QtWidgets.QWidget):
@@ -66,29 +62,24 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 self.drawDevices()
 
             installButton = QtWidgets.QPushButton("Установить")
-            installButton.clicked.connect(lambda state, target=device: install(target, getPath()))
+            installButton.clicked.connect(lambda state, target=device: self.install(target))
 
             self.scrollLayout.addWidget(deviceName, 0, i, 1, 1)
             self.scrollLayout.addWidget(deviceVersion, 1, i, 1, 1)
             self.scrollLayout.addWidget(installButton, 2, i, 1, 1)
             i += 1
 
+    def getPath(self):
+        return self.fileDrop.placeholderText()
 
-def getPath():
-    global path
-    print(path)
-    return path
+    def install(self, device):
+        self.errorLabel.setText('Начало установки')
+        try:
+            device.install(path=self.getPath(), reinstall=True)
+        except Exception:
+            self.errorLabel.setText('Произошла ошибка')
 
-
-def install(device, path):
-    ui.errorLabel.setText('Начало установки')
-
-    try:
-        device.install(path=path, reinstall=True)
-    except Exception as e:
-        ui.errorLabel.setText(str(e))
-
-    ui.errorLabel.setText('Установка завершена')
+        self.errorLabel.setText('Установка завершена')
 
 
 if __name__ == "__main__":
@@ -97,19 +88,4 @@ if __name__ == "__main__":
     ui = Ui_MainWindow()
     ui.setupUi()
     MainWindow.show()
-
-
-def updateDevices():
-    global oldDevices
-    newDevices = client.devices()
-
-    if oldDevices != newDevices:
-        # ui.drawDevices()
-        oldDevices = newDevices
-
-
-timer = QTimer()
-timer.timeout.connect(updateDevices)
-timer.start(30)
-
-sys.exit(app.exec_())
+    sys.exit(app.exec_())
