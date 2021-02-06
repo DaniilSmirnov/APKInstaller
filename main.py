@@ -53,26 +53,29 @@ class Ui_MainWindow(QtWidgets.QWidget):
         i = 0
 
         connected_devices = client.devices()
-        for device in connected_devices:
-            try:
-                name = device.get_properties().get('ro.product.manufacturer') + " " + device.get_properties().get(
-                        'ro.product.model')
-                deviceName = QtWidgets.QLabel(name)
-                deviceVersion = QtWidgets.QLabel("Android " + device.get_properties().get('ro.build.version.release'))
-            except RuntimeError:
-                self.drawDevices()
+        if len(client.devices()) == 0:
+            self.scrollLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'), 0, i, 1, 1)
+        else:
+            for device in connected_devices:
+                try:
+                    name = device.get_properties().get('ro.product.manufacturer') + " " + device.get_properties().get(
+                            'ro.product.model')
+                    deviceName = QtWidgets.QLabel(name)
+                    deviceVersion = QtWidgets.QLabel("Android " + device.get_properties().get('ro.build.version.release'))
+                except RuntimeError:
+                    self.drawDevices()
 
-            installButton = QtWidgets.QPushButton("Установить")
-            installButton.clicked.connect(lambda state, target=device, model=name: self.install(target, model))
+                installButton = QtWidgets.QPushButton("Установить")
+                installButton.clicked.connect(lambda state, target=device, model=name: self.install(target, model))
 
-            deviceName.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-            deviceVersion.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-            installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+                deviceName.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+                deviceVersion.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+                installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
-            self.scrollLayout.addWidget(deviceName, 0, i, 1, 1)
-            self.scrollLayout.addWidget(deviceVersion, 1, i, 1, 1)
-            self.scrollLayout.addWidget(installButton, 2, i, 1, 1)
-            i += 1
+                self.scrollLayout.addWidget(deviceName, 0, i, 1, 1)
+                self.scrollLayout.addWidget(deviceVersion, 1, i, 1, 1)
+                self.scrollLayout.addWidget(installButton, 2, i, 1, 1)
+                i += 1
 
     def getPath(self):
         return self.fileDrop.placeholderText()
