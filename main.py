@@ -28,7 +28,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 2)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
         self.scrollWidget = QtWidgets.QWidget()
         self.scrollLayout = QtWidgets.QGridLayout(self.scrollWidget)
         self.scrollWidget.setLayout(self.scrollLayout)
@@ -36,7 +36,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         self.errorLabel = QtWidgets.QLabel('')
         self.mainLayout.addWidget(self.errorLabel, 2, 0, 1, 1)
-        self.errorLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
