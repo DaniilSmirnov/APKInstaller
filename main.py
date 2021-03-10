@@ -3,8 +3,11 @@ from ppadb.client import Client as AdbClient
 import sys
 
 from fileedit import FileEdit
+from threading import Timer
 
 client = AdbClient(host="127.0.0.1", port=5037)
+
+buttons = {}
 
 
 class Ui_MainWindow(QtWidgets.QWidget):
@@ -25,7 +28,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 2)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
+        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.scrollWidget = QtWidgets.QWidget()
         self.scrollLayout = QtWidgets.QGridLayout(self.scrollWidget)
         self.scrollWidget.setLayout(self.scrollLayout)
@@ -33,6 +36,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         self.errorLabel = QtWidgets.QLabel('')
         self.mainLayout.addWidget(self.errorLabel, 2, 0, 1, 1)
+        self.errorLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -42,10 +46,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
         MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
 
         self.forceDevices.clicked.connect(self.drawDevices)
-
         self.drawDevices()
 
     def drawDevices(self):
+        buttons.clear()
 
         for i in range(self.scrollLayout.count()):
             self.scrollLayout.itemAt(i).widget().deleteLater()
@@ -59,14 +63,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
             for device in connected_devices:
                 try:
                     name = device.get_properties().get('ro.product.manufacturer') + " " + device.get_properties().get(
-                            'ro.product.model')
+                        'ro.product.model')
                     deviceName = QtWidgets.QLabel(name)
-                    deviceVersion = QtWidgets.QLabel("Android " + device.get_properties().get('ro.build.version.release'))
-                except RuntimeError:
-                    self.drawDevices()
+                    deviceVersion = QtWidgets.QLabel(
+                        "Android " + device.get_properties().get('ro.build.version.release'))
+                except Exception:
+                    continue
 
                 installButton = QtWidgets.QPushButton("Установить")
                 installButton.clicked.connect(lambda state, target=device, model=name: self.install(target, model))
+                buttons.update({device: installButton})
 
                 deviceName.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
                 deviceVersion.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
@@ -81,13 +87,19 @@ class Ui_MainWindow(QtWidgets.QWidget):
         return self.fileDrop.placeholderText()
 
     def install(self, device, name):
-        try:
-            device.install(path=self.getPath(), reinstall=True)
-        except Exception:
-            self.errorLabel.setText('Произошла ошибка установки на ' + name)
-            return
+        def deploy(device):
+            try:
+                device.install(path=self.getPath(), reinstall=True)
+            except Exception:
+                self.errorLabel.setText('Произошла ошибка установки на ' + name)
+                buttons.get(device).setText('Ошибка')
+                return
+            self.errorLabel.setText('Установка завершена на ' + name)
+            buttons.get(device).setText('Установить')
 
-        self.errorLabel.setText('Установка завершена на ' + name)
+        buttons.get(device).setText('Установка')
+
+        Timer(0, deploy, args=[device]).start()
 
 
 if __name__ == "__main__":
