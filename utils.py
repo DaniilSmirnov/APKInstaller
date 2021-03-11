@@ -1,6 +1,7 @@
 import re
 
 
+
 def getVersionCode(device, package):
     cmd = 'dumpsys package {} | grep versionCode'.format(package)
     result = device.shell(cmd).strip()
@@ -10,9 +11,9 @@ def getVersionCode(device, package):
     if result:
         match = re.search(pattern, result)
         version = match.group(1)
-        return version
+        return "Сборка " + version
     else:
-        return None
+        return ""
 
 
 def getDeviceName(device):
