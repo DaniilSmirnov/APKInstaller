@@ -1,3 +1,5 @@
+import re
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ppadb.client import Client as AdbClient
 import sys
@@ -5,6 +7,9 @@ import sys
 from fileedit import FileEdit
 from threading import Timer
 
+from utils import getVersionCode, getDeviceName, getAndroidVersion
+
+package = 'com.vkontakte.android'
 buttons = {}
 
 
@@ -31,9 +36,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.scrollLayout = QtWidgets.QGridLayout(self.scrollWidget)
         self.scrollWidget.setLayout(self.scrollLayout)
         self.scrollArea.setWidget(self.scrollWidget)
-
-        self.errorLabel = QtWidgets.QLabel('')
-        self.mainLayout.addWidget(self.errorLabel, 2, 0, 1, 1)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -66,39 +68,37 @@ class Ui_MainWindow(QtWidgets.QWidget):
         else:
             for device in connected_devices:
                 try:
-                    name = device.get_properties().get('ro.product.manufacturer') + " " + device.get_properties().get(
-                        'ro.product.model')
-                    deviceName = QtWidgets.QLabel(name)
-                    deviceVersion = QtWidgets.QLabel(
-                        "Android " + device.get_properties().get('ro.build.version.release'))
+                    deviceName = QtWidgets.QLabel(getDeviceName(device))
+                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, package))
+                    deviceVersion = QtWidgets.QLabel(getAndroidVersion(device))
                 except Exception:
                     continue
 
                 installButton = QtWidgets.QPushButton("Установить")
-                installButton.clicked.connect(lambda state, target=device, model=name: self.install(target, model))
+                installButton.clicked.connect(lambda state, target=device: self.install(target))
                 buttons.update({device: installButton})
 
                 deviceName.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
                 deviceVersion.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+                deviceVersionCode.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
                 installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
                 self.scrollLayout.addWidget(deviceName, 0, i, 1, 1)
                 self.scrollLayout.addWidget(deviceVersion, 1, i, 1, 1)
-                self.scrollLayout.addWidget(installButton, 2, i, 1, 1)
+                self.scrollLayout.addWidget(deviceVersionCode, 2, i, 1, 1)
+                self.scrollLayout.addWidget(installButton, 3, i, 1, 1)
                 i += 1
 
     def getPath(self):
         return self.fileDrop.placeholderText()
 
-    def install(self, device, name):
+    def install(self, device):
         def deploy(device):
             try:
                 device.install(path=self.getPath(), reinstall=True)
             except Exception:
-                self.errorLabel.setText('Произошла ошибка установки на ' + name)
                 buttons.get(device).setText('Ошибка')
                 return
-            self.errorLabel.setText('Установка завершена на ' + name)
             buttons.get(device).setText('Установить')
 
         buttons.get(device).setText('Установка')
