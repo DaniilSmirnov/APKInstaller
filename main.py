@@ -5,8 +5,6 @@ import sys
 from fileedit import FileEdit
 from threading import Timer
 
-client = AdbClient(host="127.0.0.1", port=5037)
-
 buttons = {}
 
 
@@ -44,8 +42,15 @@ class Ui_MainWindow(QtWidgets.QWidget):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
 
+        self.startAdb()
         self.forceDevices.clicked.connect(self.drawDevices)
         self.drawDevices()
+
+    def startAdb(self):
+        try:
+            self.client = AdbClient(host="127.0.0.1", port=5037)
+        except Exception:
+            self.scrollLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'), 0, 0, 1, 1)
 
     def drawDevices(self):
         buttons.clear()
@@ -55,8 +60,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         i = 0
 
-        connected_devices = client.devices()
-        if len(client.devices()) == 0:
+        connected_devices = self.client.devices()
+        if len(self.client.devices()) == 0:
             self.scrollLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'), 0, i, 1, 1)
         else:
             for device in connected_devices:
