@@ -1,8 +1,9 @@
+import sys
+
 try:
     from PyQt5 import QtCore, QtGui, QtWidgets
 except Exception:
     import subprocess
-    import sys
     subprocess.check_call([sys.executable, "--user", "pip3", "install", 'PyQt5'])
     from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -10,11 +11,9 @@ try:
     from ppadb.client import Client as AdbClient
 except Exception:
     import subprocess
-    import sys
     subprocess.check_call([sys.executable, "--user", "pip3", "install", 'pure-python-adb'])
     from ppadb.client import Client as AdbClient
 
-import sys
 
 from fileedit import FileEdit
 from threading import Timer
