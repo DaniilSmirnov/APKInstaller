@@ -25,7 +25,7 @@ script:
 deploy:
   provider: releases
   api_key:
-    secure: "hAGqHRklyGRY1ttamHogZeh7vG3QMeV9kvmvHIzv5gDVGWosz45usN0pcG5uH8S0ovwCBG589Sc9sU1Pv56i2mAwp3zLdMcQdsm9DFQ2RyiGxwBXPjJG+DRuhBR7zHF2YG5RIpujrzjCNRfOZMGoN+pc2jPxhX4ChtftaUdXk9/OvAqWE/rSQVKF2i5MtT+zi3RV8hdHG2kp77+AkbN4BBxIr5Tt543pupbmIc4iaKkuNy7abojKEzaQzd6zc8zkY/n2JBKKTCZjgX3DjGjYiPTkXhfUnsyIGG50jQ32b/BupFG3uviREiV0cMIaSYD4+vUlbGL3kRDoTQR/qPIVJ/3OLojqxTxk8Vqe7/1NyHzsAO+oigNw+ZT25FrXsoCgg3886/daNqu2+ywKAp3C1KnrbN2cv+DJeEbiYodDXket+D95xaZFN7bgecGjUqpGgZTexYDFxon1cdhnkWgKQAcEU8vJI/0wufeIbOGjo+xLY6hSCWiyedMrt0Jx6z1PLpiuE6jzc1vU0MVh5OR3pK0FYa09ICGcFPlePrCxBbieGF+LqWUOXBLCF8ZhbuaOyQcwvjsUkKISXMM1rU88aJmT8pXTMv3lfwGJTDyc6bDh5fIF1ziR7u4V742RdR6qUmk++5/ETyMUIueoYtdoXMFoFq5BZaHFwGpdADCObMk="
+    secure: "764f315cfa39a4cb45f2078608821b66a5914c37"
   file_glob: true
   file:
     - "dist_app/*.dmg"
