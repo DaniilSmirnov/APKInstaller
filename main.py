@@ -1,14 +1,62 @@
 import sys
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ppadb.client import Client as AdbClient
-
-from fileedit import FileEdit
 from threading import Timer
-from utils import getVersionCode, getDeviceName, getAndroidVersion
 
 package = 'com.vkontakte.android'
 
+from PyQt5 import QtWidgets
+
+import re
+
+
+def getVersionCode(device, package):
+    cmd = 'dumpsys package {} | grep versionCode'.format(package)
+    result = device.shell(cmd).strip()
+
+    pattern = "versionCode=([\d\.]+)"
+
+    if result:
+        match = re.search(pattern, result)
+        version = match.group(1)
+        return "Сборка " + version
+    else:
+        return "Не установлено"
+
+
+def getDeviceName(device):
+    return device.get_properties().get('ro.product.manufacturer') + " " + device.get_properties().get(
+        'ro.product.model')
+
+
+def getAndroidVersion(device):
+    return "Android " + device.get_properties().get('ro.build.version.release')
+
+
+class FileEdit(QtWidgets.QLineEdit):
+    def __init__(self, parent):
+        super(FileEdit, self).__init__(parent)
+
+        self.setDragEnabled(True)
+        self.setPlaceholderText('Помести сюда файл через drag n drop')
+
+    def dragEnterEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if urls and urls[0].scheme() == 'file':
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if urls and urls[0].scheme() == 'file':
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        data = event.mimeData()
+        url = data.urls()[0]
+        path = url.toLocalFile()
+        self.setPlaceholderText(str(path))
 
 class Ui_MainWindow(QtWidgets.QWidget):
     buttons = {}
