@@ -24,7 +24,7 @@ else
     NAMEVERSION=${1}_${2}
 fi
 
-SCRIPT=".travis/${NAME}.py"
+SCRIPT="${NAME}.py"
 APP="./dist_app/${NAME}.app"
 DMG="./dist_app/${NAMEVERSION}.dmg"
 PKG="./dist_app/${NAME}.pkg"
