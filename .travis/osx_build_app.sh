@@ -28,9 +28,11 @@ pip install pyinstaller
 pyinstaller -y --distpath="./dist_app" --onefile --name="ApkInstaller" --debug=all --additional-hooks-dir=".travis" $SCRIPT
 
 echo ""
-echo "...Testing the app (this should print the version)."
+echo "dir contains"
 ls ./dist_app
-./dist_app/$ApkInstaller.app/Contents/MacOS/ApkInstaller --version
+echo ""
+echo "...Testing the app (this should print the version)."
+./dist_app/ApkInstaller.app/Contents/MacOS/ApkInstaller --version
 echo ""
 
 pkgbuild --install-location /Applications/ --component ${APP} ${PKG}
