@@ -30,7 +30,7 @@ before_deploy:
   - git tag $TRAVIS_TAG
 deploy:
   provider: releases
-  api_key: "764f315cfa39a4cb45f2078608821b66a5914c37"
+  api_key: "5c55258c9bc32b7e677856770ac8e4d54eeaf6fa"
   file_glob: true
   file:
     - "dist_app/*.dmg"
