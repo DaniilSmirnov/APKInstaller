@@ -33,10 +33,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
         self.downloadBuild = QtWidgets.QPushButton("Скачать")
-        self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
+        #self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
 
         self.openSettings = QtWidgets.QPushButton("Настройки")
-        self.mainLayout.addWidget(self.openSettings, 0, 4, 1, 1)
+        #self.mainLayout.addWidget(self.openSettings, 0, 4, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
