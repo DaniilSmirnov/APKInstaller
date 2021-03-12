@@ -21,7 +21,7 @@ install:
 - pip freeze
 script:
 # append "App" to avoid naming conflicts with python library
-- bash ./.travis/osx_build_app.sh /Users/travis/build/DaniilSmirnov/APKInstaller/main $TRAVIS_TAG
+- bash ./.travis/osx_build_app.sh main $TRAVIS_TAG
 deploy:
   provider: releases
   api_key:
