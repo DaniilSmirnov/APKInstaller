@@ -1,7 +1,6 @@
 import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from ppadb.client import Client as AdbClient
 
 from fileedit import FileEdit
 from threading import Timer
@@ -97,6 +96,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
     def startAdb(self):
         try:
+            def AdbClient(host, port):
+                pass
+
             self.client = AdbClient(host="127.0.0.1", port=5037)
         except Exception:
             self.scrollLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'))
