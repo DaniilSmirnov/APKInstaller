@@ -29,6 +29,7 @@ pyinstaller -y --distpath="./dist_app" --onefile --name="ApkInstaller" --debug=a
 
 echo ""
 echo "...Testing the app (this should print the version)."
+ls ./dist_app
 ./dist_app/${NAME}.app/Contents/MacOS/${NAME} --version
 echo ""
 
