@@ -1,19 +1,7 @@
 import sys
 
-try:
-    from PyQt5 import QtCore, QtGui, QtWidgets
-except Exception:
-    import subprocess
-    subprocess.check_call([sys.executable, "--user", "pip3", "install", 'PyQt5'])
-    from PyQt5 import QtCore, QtGui, QtWidgets
-
-try:
-    from ppadb.client import Client as AdbClient
-except Exception:
-    import subprocess
-    subprocess.check_call([sys.executable, "--user", "pip3", "install", 'pure-python-adb'])
-    from ppadb.client import Client as AdbClient
-
+from PyQt5 import QtCore, QtGui, QtWidgets
+from ppadb.client import Client as AdbClient
 
 from fileedit import FileEdit
 from threading import Timer
@@ -22,6 +10,7 @@ from utils import getVersionCode, getDeviceName, getAndroidVersion
 
 package = 'com.vkontakte.android'
 buttons = {}
+builds = {}
 
 
 class Ui_MainWindow(QtWidgets.QWidget):
@@ -40,11 +29,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.forceDevices, 0, 1, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
-        self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 2)
+        self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
         self.scrollWidget = QtWidgets.QWidget()
-        self.scrollLayout = QtWidgets.QGridLayout(self.scrollWidget)
+        self.scrollLayout = QtWidgets.QHBoxLayout(self.scrollWidget)
         self.scrollWidget.setLayout(self.scrollLayout)
         self.scrollArea.setWidget(self.scrollWidget)
 
@@ -80,24 +69,31 @@ class Ui_MainWindow(QtWidgets.QWidget):
             for device in connected_devices:
                 try:
                     deviceName = QtWidgets.QLabel(getDeviceName(device))
-                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, package))
                     deviceVersion = QtWidgets.QLabel(getAndroidVersion(device))
+                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, package))
                 except Exception:
                     continue
 
                 installButton = QtWidgets.QPushButton("Установить")
                 installButton.clicked.connect(lambda state, target=device: self.install(target))
                 buttons.update({device: installButton})
+                builds.update({device: deviceVersionCode})
 
                 deviceName.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
                 deviceVersion.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
                 deviceVersionCode.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
                 installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
-                self.scrollLayout.addWidget(deviceName, 0, i, 1, 1)
-                self.scrollLayout.addWidget(deviceVersion, 1, i, 1, 1)
-                self.scrollLayout.addWidget(deviceVersionCode, 2, i, 1, 1)
-                self.scrollLayout.addWidget(installButton, 3, i, 1, 1)
+                deviceBox = QtWidgets.QGroupBox()
+                boxLayout = QtWidgets.QVBoxLayout(deviceBox)
+                deviceBox.setLayout(boxLayout)
+
+                boxLayout.addWidget(deviceName)
+                boxLayout.addWidget(deviceVersion)
+                boxLayout.addWidget(deviceVersionCode)
+                boxLayout.addWidget(installButton)
+
+                self.scrollLayout.addWidget(deviceBox)
                 i += 1
 
     def getPath(self):
@@ -111,6 +107,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 buttons.get(device).setText('Ошибка')
                 return
             buttons.get(device).setText('Установить')
+            builds.get(device).setText(getVersionCode(device, package))
 
         buttons.get(device).setText('Установка')
 
