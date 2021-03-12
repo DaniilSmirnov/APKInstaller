@@ -17,7 +17,7 @@ matrix:
 install:
 - source ./.travis/osx_setup_python.sh $MAC_PYTHON_VERSION $MAC_PYTHON_OSX_VERSION
 - python --version
-- pip install -e .
+- pip install PyQt5 pure-python-adb.
 - pip freeze
 script:
 # append "App" to avoid naming conflicts with python library
