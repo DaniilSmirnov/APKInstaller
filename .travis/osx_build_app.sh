@@ -1,4 +1,14 @@
 #!/bin/bash
+# Builds a macOS app in a DMG container using PyInstaller and an app launcher.
+# usage (append e.g. "App" to name to avoid naming conflicts with the library):
+#
+#     osx_build_app.sh AppNameApp [AppVersion]
+#
+# Notes:
+# - AppVersion is optional (used for name of DMG container)
+# - This script must be called from the root directory of the repository
+# - The file ./travis/AppNameApp.py [sic] must be present (relative
+#   to root of the repository)
 
 set -e
 
@@ -14,36 +24,42 @@ else
     NAMEVERSION=${1}_${2}
 fi
 
-SCRIPT="${NAME}.py"
-APP="./dist_app/ApkInstaller.app"
+SCRIPT=".travis/${NAME}.py"
+APP="./dist_app/${NAME}.app"
 DMG="./dist_app/${NAMEVERSION}.dmg"
-PKG="./dist_app/ApkInstaller.pkg"
+PKG="./dist_app/${NAME}.pkg"
 TMP="./dist_app/pack.temp.dmg"
 
+# cleanup from previous builds
 rm -rf ./build
 rm -rf ./dist_app
 
 pip install pyinstaller
 
-pyinstaller -y --distpath="./dist_app" --onefile --name="ApkInstaller.app" --debug=all --additional-hooks-dir=".travis" $SCRIPT
+# Work in a different directory (./dist_app instead of ./dist),
+# otherwise PyPI deployment on travis-CI tries to upload *.dmg files.
+pyinstaller -w -y --distpath="./dist_app" --debug=all --exclude-module tkinter --additional-hooks-dir=".travis" $SCRIPT
 
-echo ""
-echo "dir contains"
-ls ./dist_app
+# Test the binary by executing it with --version argument
 echo ""
 echo "...Testing the app (this should print the version)."
-./dist_app/ApkInstaller.app/Contents/MacOS/ApkInstaller --version
+./dist_app/${NAME}.app/Contents/MacOS/${NAME} --version
 echo ""
 
+# Create DMG
+# add link to Applications
 mkdir ./dist_app/ui-release
 cd ./dist_app/ui-release
 ln -s /Applications
 cd -
 mv ${APP} ./dist_app/ui-release/
 
+# create temporary DMG
 hdiutil create -srcfolder ./dist_app/ui-release/ -volname "${NAMEVERSION}" -fs HFS+ \
         -fsargs "-c c=64,a=16,e=16" -format UDRW "${TMP}"
 
+# create crompressed DMG
 hdiutil convert "${TMP}" -format UDZO -imagekey zlib-level=9 -o "${DMG}"
 
+# remove temporary DMG
 rm $TMP
