@@ -5,7 +5,6 @@ from ppadb.client import Client as AdbClient
 
 from fileedit import FileEdit
 from threading import Timer
-
 from utils import getVersionCode, getDeviceName, getAndroidVersion
 
 package = 'com.vkontakte.android'
@@ -30,13 +29,13 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.forceDevices, 0, 1, 1, 1)
 
         self.allInstallButton = QtWidgets.QPushButton("Установить на все")
-        #self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
+        # self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
         self.downloadBuild = QtWidgets.QPushButton("Скачать")
-        #self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
+        # self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
 
-        self.openSettings = QtWidgets.QPushButton("Настройки")
-        #self.mainLayout.addWidget(self.openSettings, 0, 4, 1, 1)
+        self.openSettingsButton = QtWidgets.QPushButton("Настройки")
+        self.mainLayout.addWidget(self.openSettingsButton, 0, 4, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
@@ -50,23 +49,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        # Обращаемся к настройкам программы
-        settings = QtCore.QSettings()
-        # Забираем состояние чекбокса, с указанием типа данных:
-        # type=bool является заменой метода toBool() в PyQt5
-        # check_state = settings.value(key, False, type=bool)
-        # Устанавливаем состояние
-        # self.check_box.setChecked(check_state)
-        # подключаем слот к сигналу клика по чекбоксу, чтобы созранять его состояние в настройках
-        # self.check_box.clicked.connect(self.save_check_box_settings)
-
-        # Слот для сохранения настроек чекбокса
-
-    def save_check_box_settings(self):
-        settings = QtCore.QSettings()
-        settings.setValue(SETTINGS_TRAY, self.check_box.isChecked())
-        settings.sync()
-
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
@@ -74,6 +56,39 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.startAdb()
         self.forceDevices.clicked.connect(self.drawDevices)
         self.allInstallButton.clicked.connect(self.allInstall)
+        self.openSettingsButton.clicked.connect(self.openSettings)
+        self.drawDevices()
+
+    def openSettings(self):
+        for i in range(self.scrollLayout.count()):
+            self.scrollLayout.itemAt(i).widget().deleteLater()
+
+        self.openSettingsButton.setText("Применить")
+
+        settings = QtCore.QSettings()
+        downloadPath = settings.value('downloadPath', "")
+
+        settingsBox = QtWidgets.QGroupBox()
+        boxLayout = QtWidgets.QVBoxLayout(settingsBox)
+        settingsBox.setLayout(boxLayout)
+
+        pathLabel = QtWidgets.QLabel("URL для загрузки сборки")
+        urlEdit = QtWidgets.QLineEdit()
+        urlEdit.setText(downloadPath)
+
+        boxLayout.addWidget(pathLabel)
+        boxLayout.addWidget(urlEdit)
+
+        self.openSettingsButton.clicked.connect(lambda state, data=urlEdit.text(): self.saveSettings(data))
+        self.scrollLayout.addWidget(settingsBox)
+
+    def saveSettings(self, data):
+        settings = QtCore.QSettings()
+        settings.setValue('downloadPath', data)
+        settings.sync()
+
+        self.openSettingsButton.setText("Настройки")
+        self.openSettingsButton.clicked.connect(self.openSettings)
         self.drawDevices()
 
     def allInstall(self):
@@ -91,8 +106,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         for i in range(self.scrollLayout.count()):
             self.scrollLayout.itemAt(i).widget().deleteLater()
-
-        i = 0
 
         connected_devices = self.client.devices()
         if len(self.client.devices()) == 0:
@@ -126,7 +139,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 boxLayout.addWidget(installButton)
 
                 self.scrollLayout.addWidget(deviceBox)
-                i += 1
 
     def getPath(self):
         return self.fileDrop.placeholderText()
