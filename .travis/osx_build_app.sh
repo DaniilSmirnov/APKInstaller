@@ -17,7 +17,7 @@ fi
 SCRIPT="${NAME}.py"
 APP="./dist_app/ApkInstaller.app"
 DMG="./dist_app/${NAMEVERSION}.dmg"
-PKG="./dist_app/${NAME}.pkg"
+PKG="./dist_app/ApkInstaller.pkg"
 TMP="./dist_app/pack.temp.dmg"
 
 rm -rf ./build
@@ -25,7 +25,7 @@ rm -rf ./dist_app
 
 pip install pyinstaller
 
-pyinstaller -y --distpath="./dist_app" --onefile --name=ApkInstaller --debug=all --additional-hooks-dir=".travis" $SCRIPT
+pyinstaller -y --distpath="./dist_app" --onefile --debug=all --additional-hooks-dir=".travis" $SCRIPT
 
 pkgbuild --install-location /Applications/ --component ${APP} ${PKG}
 
