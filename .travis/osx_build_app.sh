@@ -15,7 +15,7 @@ else
 fi
 
 SCRIPT="${NAME}.py"
-APP="./dist_app/${NAME}.app"
+APP="./dist_app/ApkInstaller.app"
 DMG="./dist_app/${NAMEVERSION}.dmg"
 PKG="./dist_app/${NAME}.pkg"
 TMP="./dist_app/pack.temp.dmg"
