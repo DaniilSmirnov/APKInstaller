@@ -1,0 +1,35 @@
+notifications:
+  email: false
+addons:
+  apt:
+    packages:
+    - x11-utils
+    - libxkbcommon-x11-0
+matrix:
+ include:
+ - os: osx
+   language: generic
+   # see https://www.python.org/downloads/mac-osx/ for valid versions
+   env:
+    - MAC_PYTHON_VERSION=3.6.8
+    - MAC_PYTHON_OSX_VERSION=10.6
+   sudo: required
+install:
+- source ./.travis/osx_setup_python.sh $MAC_PYTHON_VERSION $MAC_PYTHON_OSX_VERSION
+- python --version
+- pip install -e .
+- pip freeze
+script:
+# append "App" to avoid naming conflicts with python library
+- bash ./.travis/osx_build_app.sh ./main.py $TRAVIS_TAG
+deploy:
+  provider: releases
+  api_key:
+    secure: "hAGqHRklyGRY1ttamHogZeh7vG3QMeV9kvmvHIzv5gDVGWosz45usN0pcG5uH8S0ovwCBG589Sc9sU1Pv56i2mAwp3zLdMcQdsm9DFQ2RyiGxwBXPjJG+DRuhBR7zHF2YG5RIpujrzjCNRfOZMGoN+pc2jPxhX4ChtftaUdXk9/OvAqWE/rSQVKF2i5MtT+zi3RV8hdHG2kp77+AkbN4BBxIr5Tt543pupbmIc4iaKkuNy7abojKEzaQzd6zc8zkY/n2JBKKTCZjgX3DjGjYiPTkXhfUnsyIGG50jQ32b/BupFG3uviREiV0cMIaSYD4+vUlbGL3kRDoTQR/qPIVJ/3OLojqxTxk8Vqe7/1NyHzsAO+oigNw+ZT25FrXsoCgg3886/daNqu2+ywKAp3C1KnrbN2cv+DJeEbiYodDXket+D95xaZFN7bgecGjUqpGgZTexYDFxon1cdhnkWgKQAcEU8vJI/0wufeIbOGjo+xLY6hSCWiyedMrt0Jx6z1PLpiuE6jzc1vU0MVh5OR3pK0FYa09ICGcFPlePrCxBbieGF+LqWUOXBLCF8ZhbuaOyQcwvjsUkKISXMM1rU88aJmT8pXTMv3lfwGJTDyc6bDh5fIF1ziR7u4V742RdR6qUmk++5/ETyMUIueoYtdoXMFoFq5BZaHFwGpdADCObMk="
+  file_glob: true
+  file:
+    - "dist_app/*.dmg"
+    - "dist_app/*.pkg"
+  skip_cleanup: true
+  on:
+    tags: true
