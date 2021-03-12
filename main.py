@@ -30,7 +30,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.forceDevices, 0, 1, 1, 1)
 
         self.allInstallButton = QtWidgets.QPushButton("Установить на все")
-        self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
+        #self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
         self.downloadBuild = QtWidgets.QPushButton("Скачать")
         #self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
