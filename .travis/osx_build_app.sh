@@ -25,7 +25,7 @@ rm -rf ./dist_app
 
 pip install pyinstaller
 
-pyinstaller -w -y --distpath="./dist_app" --onefile --name=ApkInstaller --exclude-module tkinter --additional-hooks-dir=".travis" $SCRIPT
+pyinstaller  -y --distpath="./dist_app" --onefile --name=ApkInstaller  --additional-hooks-dir=".travis" $SCRIPT
 
 pkgbuild --install-location /Applications/ --component ${APP} ${PKG}
 
