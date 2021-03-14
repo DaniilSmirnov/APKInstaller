@@ -38,7 +38,7 @@ pip install pyinstaller
 
 # Work in a different directory (./dist_app instead of ./dist),
 # otherwise PyPI deployment on travis-CI tries to upload *.dmg files.
-pyinstaller -w -y --distpath="./dist_app" --debug=all --exclude-module tkinter --additional-hooks-dir=".travis" $SCRIPT
+pyinstaller -w -y --distpath="./dist_app" --exclude-module tkinter --additional-hooks-dir=".travis" $SCRIPT
 
 # Test the binary by executing it with --version argument
 echo ""
@@ -57,6 +57,9 @@ mv ${APP} ./dist_app/ui-release/
 # create temporary DMG
 hdiutil create -srcfolder ./dist_app/ui-release/ -volname "${NAMEVERSION}" -fs HFS+ \
         -fsargs "-c c=64,a=16,e=16" -format UDRW "${TMP}"
+
+# optional: edit the DMG
+# https://stackoverflow.com/questions/96882/how-do-i-create-a-nice-looking-dmg-for-mac-os-x-using-command-line-tools
 
 # create crompressed DMG
 hdiutil convert "${TMP}" -format UDZO -imagekey zlib-level=9 -o "${DMG}"
