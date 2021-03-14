@@ -11,12 +11,12 @@ def create_db():
 
     cursor.execute('''
     CREATE TABLE "settings" (
-	"url" TEXT);
+	"package" TEXT);
     ''')
 
     conn.commit()
 
-    query = 'insert into settings values (" ");'
+    query = 'insert into settings values ("com.vkontakte.android");'
     cursor.execute(query)
 
     conn.commit()
@@ -24,7 +24,7 @@ def create_db():
 
 def set_settings(url):
     conn, cursor = get_conn()
-    query = 'update settings set url = ?;'
+    query = 'update settings set package = ?;'
     data = (url,)
     cursor.execute(query, data)
     conn.commit()

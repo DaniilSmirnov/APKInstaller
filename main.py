@@ -1,6 +1,4 @@
 import sys
-import re
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ppadb.client import Client as AdbClient
 from threading import Timer
@@ -8,8 +6,6 @@ from threading import Timer
 from database import get_settings, set_settings
 from utils import *
 from fileedit import *
-
-package = 'com.vkontakte.android'
 
 
 class Ui_MainWindow(QtWidgets.QWidget):
@@ -38,7 +34,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
 
         self.openSettingsButton = QtWidgets.QPushButton("Настройки")
-        #self.mainLayout.addWidget(self.openSettingsButton, 0, 4, 1, 1)
+        self.mainLayout.addWidget(self.openSettingsButton, 0, 4, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
@@ -77,18 +73,20 @@ class Ui_MainWindow(QtWidgets.QWidget):
         boxLayout = QtWidgets.QVBoxLayout(settingsBox)
         settingsBox.setLayout(boxLayout)
 
-        pathLabel = QtWidgets.QLabel("URL для загрузки сборки")
-        urlEdit = QtWidgets.QLineEdit()
-        urlEdit.setText(settings.get('url'))
-        boxLayout.addWidget(pathLabel)
-        boxLayout.addWidget(urlEdit)
+        packageLabel = QtWidgets.QLabel("Имя пакета приложения")
+        packageEdit = QtWidgets.QLineEdit()
+        packageEdit.setText(settings.get('package'))
+        boxLayout.addWidget(packageLabel)
+        boxLayout.addWidget(packageEdit)
 
-        applySettingsButton.clicked.connect(lambda state: saveSettings(urlEdit))
+        applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
 
         self.scrollLayout.addWidget(settingsBox)
 
         def saveSettings(url):
-            set_settings(url.text())
+            text = url.text()
+            if not text.isspace():
+                set_settings(url.text())
 
             applySettingsButton.deleteLater()
             applySettingsButton.setVisible(False)
@@ -120,7 +118,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 try:
                     deviceName = QtWidgets.QLabel(getDeviceName(device))
                     deviceVersion = QtWidgets.QLabel(getAndroidVersion(device))
-                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, package))
+                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, self.getPackage()))
                 except Exception:
                     continue
 
@@ -166,16 +164,19 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 return
             self.installButtons.get(device).setText('Установить')
             self.deleteButtons.get(device).setEnabled(True)
-            self.builds.get(device).setText(getVersionCode(device, package))
+            self.builds.get(device).setText(getVersionCode(device, self.getPackage()))
 
         self.installButtons.get(device).setText('Установка')
 
         Timer(0, deploy, args=[device]).start()
 
     def uninstall(self, device):
-        device.uninstall(package)
+        device.uninstall(self.getPackage())
         self.deleteButtons.get(device).setEnabled(False)
-        self.builds.get(device).setText(getVersionCode(device, package))
+        self.builds.get(device).setText(getVersionCode(device, self.getPackage()))
+
+    def getPackage(self):
+        return get_settings().get('package')
 
 
 if __name__ == "__main__":
