@@ -1,63 +1,20 @@
 import sys
 import re
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ppadb.client import Client as AdbClient
 from threading import Timer
 
+from database import get_settings, set_settings
+from utils import *
+from fileedit import *
+
 package = 'com.vkontakte.android'
 
 
-class FileEdit(QtWidgets.QLineEdit):
-    def __init__(self, parent):
-        super(FileEdit, self).__init__(parent)
-
-        self.setDragEnabled(True)
-        self.setPlaceholderText('Помести сюда файл через drag n drop')
-
-    def dragEnterEvent(self, event):
-        data = event.mimeData()
-        urls = data.urls()
-        if urls and urls[0].scheme() == 'file':
-            event.acceptProposedAction()
-
-    def dragMoveEvent(self, event):
-        data = event.mimeData()
-        urls = data.urls()
-        if urls and urls[0].scheme() == 'file':
-            event.acceptProposedAction()
-
-    def dropEvent(self, event):
-        data = event.mimeData()
-        url = data.urls()[0]
-        path = url.toLocalFile()
-        self.setPlaceholderText(str(path))
-
-
-def getVersionCode(device, package):
-    cmd = 'dumpsys package {} | grep versionCode'.format(package)
-    result = device.shell(cmd).strip()
-
-    pattern = "versionCode=([\d\.]+)"
-
-    if result:
-        match = re.search(pattern, result)
-        version = match.group(1)
-        return "Сборка " + version
-    else:
-        return "Не установлено"
-
-
-def getDeviceName(device):
-    return device.get_properties().get('ro.product.manufacturer') + " " + device.get_properties().get(
-        'ro.product.model')
-
-
-def getAndroidVersion(device):
-    return "Android " + device.get_properties().get('ro.build.version.release')
-
-
 class Ui_MainWindow(QtWidgets.QWidget):
-    buttons = {}
+    installButtons = {}
+    deleteButtons = {}
     builds = {}
 
     def setupUi(self):
@@ -81,7 +38,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
 
         self.openSettingsButton = QtWidgets.QPushButton("Настройки")
-        self.mainLayout.addWidget(self.openSettingsButton, 0, 4, 1, 1)
+        #self.mainLayout.addWidget(self.openSettingsButton, 0, 4, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
@@ -109,10 +66,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
         for i in range(self.scrollLayout.count()):
             self.scrollLayout.itemAt(i).widget().deleteLater()
 
-        self.openSettingsButton.setText("Применить")
+        self.openSettingsButton.setVisible(False)
 
-        settings = QtCore.QSettings()
-        downloadPath = settings.value('downloadPath', "")
+        applySettingsButton = QtWidgets.QPushButton("Применить")
+        self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
+
+        settings = get_settings()
 
         settingsBox = QtWidgets.QGroupBox()
         boxLayout = QtWidgets.QVBoxLayout(settingsBox)
@@ -120,22 +79,22 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         pathLabel = QtWidgets.QLabel("URL для загрузки сборки")
         urlEdit = QtWidgets.QLineEdit()
-        urlEdit.setText(downloadPath)
-
+        urlEdit.setText(settings.get('url'))
         boxLayout.addWidget(pathLabel)
         boxLayout.addWidget(urlEdit)
 
-        self.openSettingsButton.clicked.connect(lambda state, data=urlEdit.text(): self.saveSettings(data))
+        applySettingsButton.clicked.connect(lambda state: saveSettings(urlEdit))
+
         self.scrollLayout.addWidget(settingsBox)
 
-    def saveSettings(self, data):
-        settings = QtCore.QSettings()
-        settings.setValue('downloadPath', data)
-        settings.sync()
+        def saveSettings(url):
+            set_settings(url.text())
 
-        self.openSettingsButton.setText("Настройки")
-        self.openSettingsButton.clicked.connect(self.openSettings)
-        self.drawDevices()
+            applySettingsButton.deleteLater()
+            applySettingsButton.setVisible(False)
+
+            self.openSettingsButton.setVisible(True)
+            self.drawDevices()
 
     def allInstall(self):
         for device in self.client.devices():
@@ -148,7 +107,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.scrollLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'))
 
     def drawDevices(self):
-        self.buttons.clear()
+        self.installButtons.clear()
 
         for i in range(self.scrollLayout.count()):
             self.scrollLayout.itemAt(i).widget().deleteLater()
@@ -166,23 +125,32 @@ class Ui_MainWindow(QtWidgets.QWidget):
                     continue
 
                 installButton = QtWidgets.QPushButton("Установить")
+                deleteButton = QtWidgets.QPushButton("Удалить")
+                installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+                deleteButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+
                 installButton.clicked.connect(lambda state, target=device: self.install(target))
-                self.buttons.update({device: installButton})
+                deleteButton.clicked.connect(lambda state, target=device: self.uninstall(target))
+                self.installButtons.update({device: installButton})
+                self.deleteButtons.update({device: deleteButton})
                 self.builds.update({device: deviceVersionCode})
 
                 deviceName.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
                 deviceVersion.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
                 deviceVersionCode.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-                installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
                 deviceBox = QtWidgets.QGroupBox()
-                boxLayout = QtWidgets.QVBoxLayout(deviceBox)
+                boxLayout = QtWidgets.QGridLayout(deviceBox)
                 deviceBox.setLayout(boxLayout)
 
-                boxLayout.addWidget(deviceName)
-                boxLayout.addWidget(deviceVersion)
-                boxLayout.addWidget(deviceVersionCode)
-                boxLayout.addWidget(installButton)
+                boxLayout.addWidget(deviceName, 0, 0, 1, 2)  # row, col. 2 нужна из-за двух кнопок в нижнем ряду
+                boxLayout.addWidget(deviceVersion, 1, 0, 1, 2)
+                boxLayout.addWidget(deviceVersionCode, 2, 0, 1, 2)
+                boxLayout.addWidget(installButton, 3, 0, 1, 1)
+                boxLayout.addWidget(deleteButton, 3, 1, 1, 1)
+
+                if deviceVersionCode.text().find('Не установлено') != -1:
+                    deleteButton.setEnabled(False)
 
                 self.scrollLayout.addWidget(deviceBox)
 
@@ -194,14 +162,20 @@ class Ui_MainWindow(QtWidgets.QWidget):
             try:
                 device.install(path=self.getPath(), reinstall=True)
             except Exception:
-                self.buttons.get(device).setText('Ошибка')
+                self.installButtons.get(device).setText('Ошибка')
                 return
-            self.buttons.get(device).setText('Установить')
+            self.installButtons.get(device).setText('Установить')
+            self.deleteButtons.get(device).setEnabled(True)
             self.builds.get(device).setText(getVersionCode(device, package))
 
-        self.buttons.get(device).setText('Установка')
+        self.installButtons.get(device).setText('Установка')
 
         Timer(0, deploy, args=[device]).start()
+
+    def uninstall(self, device):
+        device.uninstall(package)
+        self.deleteButtons.get(device).setEnabled(False)
+        self.builds.get(device).setText(getVersionCode(device, package))
 
 
 if __name__ == "__main__":
