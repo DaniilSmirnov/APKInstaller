@@ -2,11 +2,10 @@ import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ppadb.client import Client as AdbClient
 from threading import Timer
-from time import sleep
 
 from database import get_settings, set_settings, getPackage
-from utils import *
-from fileedit import *
+from utils import getDeviceName, getVersionCode, getAndroidVersion
+from fileedit import FileEdit
 
 
 class Ui_MainWindow(QtWidgets.QWidget):
@@ -30,9 +29,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         self.allInstallButton = QtWidgets.QPushButton("Установить на все")
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
-
-        self.downloadBuild = QtWidgets.QPushButton("Скачать")
-        # self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
 
         self.openSettingsButton = QtWidgets.QPushButton("Настройки")
         self.mainLayout.addWidget(self.openSettingsButton, 0, 4, 1, 1)
@@ -59,7 +55,14 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.forceDevices.clicked.connect(self.drawDevices)
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
+        self.fileDrop.clicked.connect(self.openFileSelect)
+
         self.drawDevices()
+
+    def openFileSelect(self):
+        text = QtWidgets.QFileDialog.getOpenFileName(self, "Выбор файла", 'C://Users')
+        file = text[0]
+        self.fileDrop.setPlaceholderText(file)
 
     def openSettings(self):
         for i in range(self.scrollLayout.count()):

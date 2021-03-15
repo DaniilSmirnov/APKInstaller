@@ -1,4 +1,5 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore, Qt
+from PyQt5.QtCore import pyqtSignal
 
 
 class FileEdit(QtWidgets.QLineEdit):
@@ -6,7 +7,12 @@ class FileEdit(QtWidgets.QLineEdit):
         super(FileEdit, self).__init__(parent)
 
         self.setDragEnabled(True)
-        self.setPlaceholderText('Помести сюда файл через drag n drop')
+        self.setPlaceholderText('Закинь файл через drag n drop или нажми для выбора')
+
+    clicked = pyqtSignal()
+
+    def mousePressEvent(self, event):
+        self.clicked.emit()
 
     def dragEnterEvent(self, event):
         data = event.mimeData()
