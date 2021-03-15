@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from ppadb.client import Client as AdbClient
 from threading import Timer
 
-from database import get_settings, set_settings
+from database import get_settings, set_settings, getPackage
 from utils import *
 from fileedit import *
 
@@ -63,6 +63,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.scrollLayout.itemAt(i).widget().deleteLater()
 
         self.openSettingsButton.setVisible(False)
+        self.forceDevices.setVisible(False)
 
         applySettingsButton = QtWidgets.QPushButton("Применить")
         self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
@@ -92,10 +93,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
             applySettingsButton.setVisible(False)
 
             self.openSettingsButton.setVisible(True)
+            self.forceDevices.setVisible(True)
             self.drawDevices()
 
     def allInstall(self):
-        for device in self.client.devices():
+        connected_devices = self.client.devices()
+        for device in connected_devices:
             self.install(device)
 
     def startAdb(self):
@@ -118,7 +121,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 try:
                     deviceName = QtWidgets.QLabel(getDeviceName(device))
                     deviceVersion = QtWidgets.QLabel(getAndroidVersion(device))
-                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, self.getPackage()))
+                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, getPackage()))
                 except Exception:
                     continue
 
@@ -164,19 +167,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 return
             self.installButtons.get(device).setText('Установить')
             self.deleteButtons.get(device).setEnabled(True)
-            self.builds.get(device).setText(getVersionCode(device, self.getPackage()))
+            self.builds.get(device).setText(getVersionCode(device, getPackage()))
 
         self.installButtons.get(device).setText('Установка')
 
         Timer(0, deploy, args=[device]).start()
 
     def uninstall(self, device):
-        device.uninstall(self.getPackage())
+        device.uninstall(getPackage())
         self.deleteButtons.get(device).setEnabled(False)
-        self.builds.get(device).setText(getVersionCode(device, self.getPackage()))
-
-    def getPackage(self):
-        return get_settings().get('package')
+        self.builds.get(device).setText(getVersionCode(device, getPackage()))
 
 
 if __name__ == "__main__":

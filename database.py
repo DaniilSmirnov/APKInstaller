@@ -16,7 +16,7 @@ def create_db():
 
     conn.commit()
 
-    query = 'insert into settings values ("com.vkontakte.android");'
+    query = 'insert into settings values ("com.android.chrome");'
     cursor.execute(query)
 
     conn.commit()
@@ -72,3 +72,6 @@ def get_column_names(colnames):
         response.append(row[0])
 
     return response
+
+def getPackage():
+    return get_settings().get('package')
