@@ -2,6 +2,7 @@ import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ppadb.client import Client as AdbClient
 from threading import Timer
+from time import sleep
 
 from database import get_settings, set_settings, getPackage
 from utils import *
@@ -28,7 +29,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.forceDevices, 0, 1, 1, 1)
 
         self.allInstallButton = QtWidgets.QPushButton("Установить на все")
-        # self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
+        self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
         self.downloadBuild = QtWidgets.QPushButton("Скачать")
         # self.mainLayout.addWidget(self.downloadBuild, 0, 3, 1, 1)
@@ -37,6 +38,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.openSettingsButton, 0, 4, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
+        self.scrollArea.verticalScrollBar().setEnabled(False)
+        self.scrollArea.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
@@ -97,9 +100,15 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.drawDevices()
 
     def allInstall(self):
+        self.cleanScrollLayout()
         connected_devices = self.client.devices()
         for device in connected_devices:
-            self.install(device)
+            device.install(path=self.getPath(), reinstall=True)
+        self.drawDevices()
+
+    def cleanScrollLayout(self):
+        for i in range(self.scrollLayout.count()):
+            self.scrollLayout.itemAt(i).widget().deleteLater()
 
     def startAdb(self):
         try:
