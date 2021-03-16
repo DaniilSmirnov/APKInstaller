@@ -4,7 +4,7 @@ from PyQt5.QtCore import QTimer
 from ppadb.client import Client as AdbClient
 from threading import Timer
 
-from database import get_settings, set_settings, getPackage
+from database import get_settings, set_settings, getPackages
 from utils import getDeviceName, getVersionCode, getAndroidVersion
 from fileedit import FileEdit
 
@@ -26,6 +26,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         self.fileDrop = FileEdit(self.centralwidget)
         self.mainLayout.addWidget(self.fileDrop, 0, 0, 1, 1)
+
+        self.packageSelector = QtWidgets.QComboBox()
+        self.mainLayout.addWidget(self.packageSelector, 0, 1, 1, 1)
+        self.fillPackageSelector()
 
         self.allInstallButton = QtWidgets.QPushButton("Установить на все")
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
@@ -59,18 +63,29 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
+        self.packageSelector.currentTextChanged.connect(self.drawDevices)
+
+    def getCurrentPackage(self):
+        return self.packageSelector.currentText()
 
     def openFileSelect(self):
         text = QtWidgets.QFileDialog.getOpenFileName(self, "Выбор файла", 'C://Users')
         file = text[0]
         self.fileDrop.setPlaceholderText(file)
 
+    def fillPackageSelector(self):
+        self.packageSelector.clear()
+        packages = getPackages()
+        if len(packages) > 0:
+            self.packageSelector.addItems(packages)
+        else:
+            self.packageSelector.addItem('Выбери пакет')
+
     def openSettings(self):
         for i in range(self.scrollLayout.count()):
             self.scrollLayout.itemAt(i).widget().deleteLater()
 
         self.openSettingsButton.setVisible(False)
-        self.forceDevices.setVisible(False)
 
         applySettingsButton = QtWidgets.QPushButton("Применить")
         self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
@@ -82,9 +97,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
         settingsBox.setLayout(boxLayout)
 
         packageLabel = QtWidgets.QLabel("Имя пакета приложения")
+        packageInfoLabel = QtWidgets.QLabel("Можно ввести несколько через запятую")
         packageEdit = QtWidgets.QLineEdit()
         packageEdit.setText(settings.get('package'))
         boxLayout.addWidget(packageLabel)
+        boxLayout.addWidget(packageInfoLabel)
         boxLayout.addWidget(packageEdit)
 
         applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
@@ -92,15 +109,15 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.scrollLayout.addWidget(settingsBox)
 
         def saveSettings(url):
-            text = url.text()
+            text = url.text().strip()
             if not text.isspace():
-                set_settings(url.text())
+                set_settings(text)
 
             applySettingsButton.deleteLater()
             applySettingsButton.setVisible(False)
 
             self.openSettingsButton.setVisible(True)
-            self.forceDevices.setVisible(True)
+            self.fillPackageSelector()
             self.drawDevices()
 
     def allInstall(self):
@@ -126,19 +143,26 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def drawDevices(self):
         self.installButtons.clear()
 
-        for i in range(self.scrollLayout.count()):
-            self.scrollLayout.itemAt(i).widget().deleteLater()
+        self.cleanScrollLayout()
+
+        if self.packageSelector.currentText() == 'Выбери пакет':
+            self.scrollLayout.addWidget(QtWidgets.QLabel('Сначала нужно выбрать имя пакета'))
+            return
 
         connected_devices = self.client.devices()
         self.current_devices = connected_devices
         if len(self.client.devices()) == 0:
-            self.scrollLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
+            deviceBox = QtWidgets.QGroupBox()
+            boxLayout = QtWidgets.QGridLayout(deviceBox)
+            deviceBox.setLayout(boxLayout)
+            deviceBox.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
+            self.scrollLayout.addWidget(deviceBox)
         else:
             for device in connected_devices:
                 try:
                     deviceName = QtWidgets.QLabel(getDeviceName(device))
                     deviceVersion = QtWidgets.QLabel(getAndroidVersion(device))
-                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, getPackage()))
+                    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, self.getCurrentPackage()))
                 except Exception:
                     continue
 
@@ -184,16 +208,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 return
             self.installButtons.get(device).setText('Установить')
             self.deleteButtons.get(device).setEnabled(True)
-            self.builds.get(device).setText(getVersionCode(device, getPackage()))
+            self.builds.get(device).setText(getVersionCode(device, self.getCurrentPackage()))
 
         self.installButtons.get(device).setText('Установка')
 
         Timer(0, deploy, args=[device]).start()
 
     def uninstall(self, device):
-        device.uninstall(getPackage())
+        device.uninstall(self.getCurrentPackage())
         self.deleteButtons.get(device).setEnabled(False)
-        self.builds.get(device).setText(getVersionCode(device, getPackage()))
+        self.builds.get(device).setText(getVersionCode(device, self.getCurrentPackage()))
 
 
 def checkDevicesActuality():

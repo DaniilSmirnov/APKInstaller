@@ -73,5 +73,13 @@ def get_column_names(colnames):
 
     return response
 
-def getPackage():
-    return get_settings().get('package')
+
+def getPackages():
+    response = []
+    raw = get_settings().get('package')
+    if raw.find(',') == -1:
+        response.append(raw)
+    else:
+        response = raw.split(',')
+    return response
+
