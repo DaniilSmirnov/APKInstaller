@@ -104,10 +104,13 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.drawDevices()
 
     def allInstall(self):
-        self.cleanScrollLayout()
         connected_devices = self.client.devices()
         for device in connected_devices:
-            device.install(path=self.getPath(), reinstall=True)
+            try:
+                device.install(path=self.getPath(), reinstall=True)
+            except FileNotFoundError:
+                return
+        self.cleanScrollLayout()
         self.drawDevices()
 
     def cleanScrollLayout(self):
