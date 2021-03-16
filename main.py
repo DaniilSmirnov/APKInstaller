@@ -1,5 +1,6 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QTimer
 from ppadb.client import Client as AdbClient
 from threading import Timer
 
@@ -12,10 +13,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
     installButtons = {}
     deleteButtons = {}
     builds = {}
+    current_devices = {}
 
     def setupUi(self):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(500, 180)
+        MainWindow.setWindowIcon(QtGui.QIcon('icons/APK_icon.png'))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.mainLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -24,14 +27,13 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.fileDrop = FileEdit(self.centralwidget)
         self.mainLayout.addWidget(self.fileDrop, 0, 0, 1, 1)
 
-        self.forceDevices = QtWidgets.QPushButton("Обновить")
-        self.mainLayout.addWidget(self.forceDevices, 0, 1, 1, 1)
-
         self.allInstallButton = QtWidgets.QPushButton("Установить на все")
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
-        self.openSettingsButton = QtWidgets.QPushButton("Настройки")
-        self.mainLayout.addWidget(self.openSettingsButton, 0, 4, 1, 1)
+        self.openSettingsButton = QtWidgets.QPushButton()
+        self.openSettingsButton.setIcon(QtGui.QIcon('icons/settings.png'))
+        self.openSettingsButton.setToolTip('Открыть настройки')
+        self.mainLayout.addWidget(self.openSettingsButton, 0, 3, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.scrollArea.verticalScrollBar().setEnabled(False)
@@ -52,12 +54,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
         MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
 
         self.startAdb()
-        self.forceDevices.clicked.connect(self.drawDevices)
+        self.drawDevices()
+
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
-
-        self.drawDevices()
 
     def openFileSelect(self):
         text = QtWidgets.QFileDialog.getOpenFileName(self, "Выбор файла", 'C://Users')
@@ -126,6 +127,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.scrollLayout.itemAt(i).widget().deleteLater()
 
         connected_devices = self.client.devices()
+        self.current_devices = connected_devices
         if len(self.client.devices()) == 0:
             self.scrollLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
         else:
@@ -191,10 +193,55 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.builds.get(device).setText(getVersionCode(device, getPackage()))
 
 
+def checkDevicesActuality():
+    def isActualOnline():
+        for device in ui.current_devices:
+            try:
+                device.get_serial_no()
+            except RuntimeError:
+                ui.drawDevices()
+                return False
+        return True
+
+    def getSerialsArray(devices):
+        response = []
+        for device in devices:
+            try:
+                response.append(device.get_serial_no())
+            except RuntimeError:
+                ui.drawDevices()
+                break
+        return response
+
+    if isActualOnline():
+        if len(ui.client.devices()) != len(ui.current_devices):
+            ui.drawDevices()
+            return
+
+        connected_devices = ui.client.devices()
+        current_devices = getSerialsArray(ui.current_devices)
+
+        for device in connected_devices:
+            try:
+                if device.get_serial_no() not in current_devices:
+                    ui.drawDevices()
+            except RuntimeError:
+                ui.drawDevices()
+                return
+    else:
+        return
+
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon('icons/APK_icon.png'))
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi()
     MainWindow.show()
+
+    reminder = QTimer()
+    reminder.timeout.connect(checkDevicesActuality)
+    reminder.start(100)
+
     sys.exit(app.exec_())
