@@ -180,7 +180,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             try:
                 device.install(path=self.getPath(), reinstall=True)
             except Exception:
-                self.installButtons.get(device).setText('Ошибка')
+                self.installButtons.get(device).setText('Повторить')
                 return
             self.installButtons.get(device).setText('Установить')
             self.deleteButtons.get(device).setEnabled(True)
