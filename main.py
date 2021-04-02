@@ -155,7 +155,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             deviceBox = QtWidgets.QGroupBox()
             boxLayout = QtWidgets.QGridLayout(deviceBox)
             deviceBox.setLayout(boxLayout)
-            deviceBox.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
+            boxLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
             self.scrollLayout.addWidget(deviceBox)
         else:
             for device in connected_devices:
