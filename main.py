@@ -57,7 +57,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
     deleteButtons = {}
     builds = {}
     current_devices = {}
+
     in_settings = False
+
 
     def setupUi(self):
         MainWindow.setObjectName("MainWindow")
@@ -123,7 +125,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         if len(packages) > 0:
             self.packageSelector.addItems(packages)
         else:
+
             self.packageSelector.addItem('Выбери приложение')
+
 
     def openSettings(self):
         self.in_settings = True
@@ -142,7 +146,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         packageLabel = QtWidgets.QLabel("Имя пакета приложения")
         packageInfoLabel = QtWidgets.QLabel("Можно ввести несколько через запятую")
+
         packageEdit = QtWidgets.QLineEdit(settings.get('package'))
+
 
         boxLayout.addWidget(packageLabel)
         boxLayout.addWidget(packageInfoLabel)
@@ -157,7 +163,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
             if not text.isspace():
                 set_settings(text)
 
+
             self.in_settings = False
+
 
             applySettingsButton.deleteLater()
             applySettingsButton.setVisible(False)
@@ -171,7 +179,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         for device in connected_devices:
             try:
                 device.install(path=self.getPath(), reinstall=True)
+
             except Exception:
+
                 return
         self.cleanScrollLayout()
         self.drawDevices()
@@ -196,13 +206,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.cleanScrollLayout()
 
         if self.packageSelector.currentText() == 'Выбери пакет':
+
             deviceBox, boxLayout = generateBox()
             boxLayout.addWidget(QtWidgets.QLabel('Сначала нужно выбрать имя пакета'))
             boxes.append(deviceBox)
 
+
         connected_devices = self.client.devices()
         self.current_devices = connected_devices
         if len(self.client.devices()) == 0:
+
             deviceBox, boxLayout = generateBox()
             boxLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
             boxes.append(deviceBox)
@@ -210,6 +223,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             for device in connected_devices:
                 try:
                     boxes.append(getDeviceBox(device))
+
                 except Exception:
                     continue
 
@@ -293,8 +307,10 @@ if __name__ == "__main__":
     ui.setupUi()
     MainWindow.show()
 
+
     updater = QTimer()
     updater.timeout.connect(checkDevicesActuality)
     updater.start(100)
+
 
     sys.exit(app.exec_())
