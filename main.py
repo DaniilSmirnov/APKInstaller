@@ -60,7 +60,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
     in_settings = False
 
-
     def setupUi(self):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(500, 180)
@@ -128,7 +127,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
             self.packageSelector.addItem('Выбери приложение')
 
-
     def openSettings(self):
         self.in_settings = True
 
@@ -149,7 +147,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         packageEdit = QtWidgets.QLineEdit(settings.get('package'))
 
-
         boxLayout.addWidget(packageLabel)
         boxLayout.addWidget(packageInfoLabel)
         boxLayout.addWidget(packageEdit)
@@ -163,9 +160,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             if not text.isspace():
                 set_settings(text)
 
-
             self.in_settings = False
-
 
             applySettingsButton.deleteLater()
             applySettingsButton.setVisible(False)
@@ -206,11 +201,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.cleanScrollLayout()
 
         if self.packageSelector.currentText() == 'Выбери пакет':
-
             deviceBox, boxLayout = generateBox()
             boxLayout.addWidget(QtWidgets.QLabel('Сначала нужно выбрать имя пакета'))
             boxes.append(deviceBox)
-
 
         connected_devices = self.client.devices()
         self.current_devices = connected_devices
@@ -307,10 +300,8 @@ if __name__ == "__main__":
     ui.setupUi()
     MainWindow.show()
 
-
     updater = QTimer()
     updater.timeout.connect(checkDevicesActuality)
     updater.start(100)
-
 
     sys.exit(app.exec_())
