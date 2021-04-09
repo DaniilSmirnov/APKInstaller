@@ -280,7 +280,8 @@ def checkDevicesActuality():
             for device in connected_devices:
                 try:
                     if device.get_serial_no() not in current_devices:
-                        ui.drawDevices()
+                        ui.scrollLayout.addWidget(getDeviceBox(device))
+                        return
                 except RuntimeError:
                     ui.drawDevices()
                     return
