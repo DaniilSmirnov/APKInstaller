@@ -124,7 +124,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         if len(packages) > 0:
             self.packageSelector.addItems(packages)
         else:
-
             self.packageSelector.addItem('Выбери приложение')
 
     def openSettings(self):
@@ -174,9 +173,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         for device in connected_devices:
             try:
                 device.install(path=self.getPath(), reinstall=True)
-
             except Exception:
-
                 return
         self.cleanScrollLayout()
         self.drawDevices()
@@ -216,7 +213,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
             for device in connected_devices:
                 try:
                     boxes.append(getDeviceBox(device))
-
                 except Exception:
                     continue
 
