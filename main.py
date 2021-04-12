@@ -21,6 +21,7 @@ def generateBox():
 def getDeviceBox(device):
     deviceBox, boxLayout = generateBox()
 
+    deviceBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
     deviceName = QtWidgets.QLabel(getDeviceName(device))
     deviceVersion = QtWidgets.QLabel(getAndroidVersion(device))
     deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, ui.getCurrentPackage()))
