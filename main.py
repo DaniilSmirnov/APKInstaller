@@ -57,7 +57,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
     installButtons = {}
     deleteButtons = {}
     builds = {}
-    current_devices = {}
+    current_devices = []
+    boxes = {}
 
     in_settings = False
 
@@ -104,12 +105,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
         MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
 
         self.startAdb()
-        self.drawDevices()
+        self.makeDeviceBoxes()
 
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
-        self.packageSelector.currentTextChanged.connect(self.drawDevices)
+        self.packageSelector.currentTextChanged.connect(self.makeDeviceBoxes)
 
     def getCurrentPackage(self):
         return self.packageSelector.currentText()
@@ -167,7 +168,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
             self.openSettingsButton.setVisible(True)
             self.fillPackageSelector()
-            self.drawDevices()
+            self.makeDeviceBoxes()
 
     def allInstall(self):
         connected_devices = self.client.devices()
@@ -177,7 +178,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             except Exception:
                 return
         self.cleanScrollLayout()
-        self.drawDevices()
+        self.makeDeviceBoxes()
 
     def cleanScrollLayout(self):
         for i in range(self.scrollLayout.count()):
@@ -185,45 +186,45 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
     def startAdb(self):
         try:
-            os.system("adb devices")
             self.client = AdbClient(host="127.0.0.1", port=5037)
         except Exception:
-            deviceBox, boxLayout = generateBox()
-            boxLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'))
-            self.scrollLayout.addWidget(deviceBox)
+            os.system("adb devices")
+            try:
+                self.client = AdbClient(host="127.0.0.1", port=5037)
+            except Exception:
+                deviceBox, boxLayout = generateBox()
+                boxLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'))
+                self.scrollLayout.addWidget(deviceBox)
 
-    def drawDevices(self):
-        boxes = []
+    def makeDeviceBoxes(self):
         self.installButtons.clear()
-
         self.cleanScrollLayout()
 
         if self.packageSelector.currentText() == 'Выбери пакет':
             deviceBox, boxLayout = generateBox()
             boxLayout.addWidget(QtWidgets.QLabel('Сначала нужно выбрать имя пакета'))
-            boxes.append(deviceBox)
+            self.boxes.update({'no_packet': deviceBox})
 
         connected_devices = self.client.devices()
-        self.current_devices = connected_devices
         if len(self.client.devices()) == 0:
 
             deviceBox, boxLayout = generateBox()
             boxLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
-            boxes.append(deviceBox)
+            self.boxes.update({'no_devices': deviceBox})
+
         else:
             for device in connected_devices:
                 try:
-                    boxes.append(getDeviceBox(device))
+                    self.boxes.update({device.get_serial_no(): getDeviceBox(device)})
+                    self.current_devices.append(device.get_serial_no())
                 except Exception:
                     continue
 
-        if len(boxes) == 1:
-            self.scrollLayout.addWidget(boxes[0])
-            return
+        self.drawDevices()
 
-        if len(boxes) > 1:
-            for box in boxes:
-                self.scrollLayout.addWidget(box)
+    def drawDevices(self):
+        for box in self.boxes:
+            self.scrollLayout.addWidget(self.boxes[box])
 
     def getPath(self):
         return self.fileDrop.placeholderText()
@@ -250,44 +251,40 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
 
 def checkDevicesActuality():
-    def isActualOnline():
-        for device in ui.current_devices:
-            try:
-                device.get_serial_no()
-            except RuntimeError:
-                ui.drawDevices()
-                return False
-        return True
-
     def getSerialsArray(devices):
         response = []
         for device in devices:
             try:
                 response.append(device.get_serial_no())
             except RuntimeError:
-                ui.drawDevices()
-                break
+                continue
         return response
 
     if not ui.in_settings:
-        if isActualOnline():
-            if len(ui.client.devices()) != len(ui.current_devices):
-                ui.drawDevices()
-                return
+        connected_devices = ui.client.devices()
+        current_devices = ui.current_devices
 
-            connected_devices = ui.client.devices()
-            current_devices = getSerialsArray(ui.current_devices)
+        for device in connected_devices:
+            try:
+                if device.get_serial_no() not in current_devices:
+                    new_device = getDeviceBox(device)
+                    ui.scrollLayout.addWidget(new_device)
+                    ui.boxes.update({device.get_serial_no(): new_device})
+            except RuntimeError:
+                continue
 
-            for device in connected_devices:
-                try:
-                    if device.get_serial_no() not in current_devices:
-                        ui.scrollLayout.addWidget(getDeviceBox(device))
-                        return
-                except RuntimeError:
-                    ui.drawDevices()
-                    return
-        else:
-            return
+        connected_devices = getSerialsArray(ui.client.devices())
+
+        for device in current_devices:
+            if device not in connected_devices:
+                widget = ui.boxes.get(device)
+                ui.boxes.pop(device)
+                ui.scrollLayout.removeWidget(widget)
+                widget.deleteLater()
+
+        ui.current_devices = connected_devices
+    else:
+        return
 
 
 if __name__ == "__main__":
@@ -300,6 +297,6 @@ if __name__ == "__main__":
 
     updater = QTimer()
     updater.timeout.connect(checkDevicesActuality)
-    updater.start(100)
+    updater.start(300)
 
     sys.exit(app.exec_())
