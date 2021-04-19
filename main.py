@@ -21,8 +21,11 @@ def getDeviceBox(device):
 
     deviceBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
     deviceName = QtWidgets.QLabel(getDeviceName(device))
+    deviceName.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
     deviceVersion = QtWidgets.QLabel(getAndroidVersion(device))
+    deviceVersion.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
     deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, ui.getCurrentPackage()))
+    deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
 
     installButton = QtWidgets.QPushButton("Установить")
     deleteButton = QtWidgets.QPushButton("Удалить")
