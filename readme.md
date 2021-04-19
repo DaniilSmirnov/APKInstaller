@@ -1,4 +1,4 @@
-![image](https://user-images.githubusercontent.com/8039921/111179359-0f7b8b00-85bd-11eb-99ab-858278f891f9.png)
+![image](https://user-images.githubusercontent.com/8039921/115286656-f6d03900-a157-11eb-9d81-d1faf05b368c.png)
 
 Для установки. После успешной установки произойдет запуск
 <br/>
