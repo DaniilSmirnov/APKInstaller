@@ -1,12 +1,10 @@
 import sys
-import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer
-from ppadb.client import Client as AdbClient
 from threading import Timer
 
 from database import get_settings, set_settings, getPackages
-from utils import getDeviceName, getVersionCode, getAndroidVersion
+from utils import getDeviceName, getVersionCode, getAndroidVersion, getDevices, adbClient
 from fileedit import FileEdit
 
 
@@ -51,21 +49,6 @@ def getDeviceBox(device):
         deleteButton.setEnabled(False)
 
     return deviceBox
-
-
-def adbClient():
-    try:
-        client = AdbClient(host="127.0.0.1", port=5037)
-    except Exception:
-        os.system("adb devices")
-        client = AdbClient(host="127.0.0.1", port=5037)
-
-    return client
-
-
-def getDevices():
-    client = adbClient()
-    return client.devices()
 
 
 class Ui_MainWindow(QtWidgets.QWidget):
