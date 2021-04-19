@@ -53,6 +53,21 @@ def getDeviceBox(device):
     return deviceBox
 
 
+def adbClient():
+    try:
+        client = AdbClient(host="127.0.0.1", port=5037)
+    except Exception:
+        os.system("adb devices")
+        client = AdbClient(host="127.0.0.1", port=5037)
+
+    return client
+
+
+def getDevices():
+    client = adbClient()
+    return client.devices()
+
+
 class Ui_MainWindow(QtWidgets.QWidget):
     installButtons = {}
     deleteButtons = {}
@@ -87,7 +102,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.openSettingsButton, 0, 3, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
-        self.scrollArea.verticalScrollBar().setEnabled(False)
         self.scrollArea.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
         self.scrollArea.setWidgetResizable(True)
@@ -105,12 +119,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
         MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
 
         self.startAdb()
-        self.makeDeviceBoxes()
+        self.drawUi()
 
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
-        self.packageSelector.currentTextChanged.connect(self.makeDeviceBoxes)
+        self.packageSelector.currentTextChanged.connect(self.drawUi)
 
     def getCurrentPackage(self):
         return self.packageSelector.currentText()
@@ -168,7 +182,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
             self.openSettingsButton.setVisible(True)
             self.fillPackageSelector()
-            self.makeDeviceBoxes()
+            self.drawUi()
 
     def allInstall(self):
         connected_devices = self.client.devices()
@@ -178,7 +192,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             except Exception:
                 return
         self.cleanScrollLayout()
-        self.makeDeviceBoxes()
+        self.drawUi()
 
     def cleanScrollLayout(self):
         for i in range(self.scrollLayout.count()):
@@ -196,7 +210,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 boxLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'))
                 self.scrollLayout.addWidget(deviceBox)
 
-    def makeDeviceBoxes(self):
+    def drawUi(self):
         self.installButtons.clear()
         self.cleanScrollLayout()
 
@@ -205,7 +219,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             boxLayout.addWidget(QtWidgets.QLabel('Сначала нужно выбрать имя пакета'))
             self.boxes.update({'no_packet': deviceBox})
 
-        connected_devices = self.client.devices()
+        connected_devices = getDevices()
         if len(self.client.devices()) == 0:
 
             deviceBox, boxLayout = generateBox()
@@ -261,7 +275,7 @@ def checkDevicesActuality():
         return response
 
     if not ui.in_settings:
-        connected_devices = ui.client.devices()
+        connected_devices = getDevices()
         current_devices = ui.current_devices
 
         for device in connected_devices:
