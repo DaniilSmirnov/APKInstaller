@@ -1,4 +1,21 @@
 import re
+import os
+from ppadb.client import Client as AdbClient
+
+
+def adbClient():
+    try:
+        client = AdbClient(host="127.0.0.1", port=5037)
+    except Exception:
+        os.system("adb devices")
+        client = AdbClient(host="127.0.0.1", port=5037)
+
+    return client
+
+
+def getDevices():
+    client = adbClient()
+    return client.devices()
 
 
 def getVersionCode(device, package):
