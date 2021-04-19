@@ -185,7 +185,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.drawUi()
 
     def allInstall(self):
-        connected_devices = self.client.devices()
+        connected_devices = getDevices()
         for device in connected_devices:
             try:
                 device.install(path=self.getPath(), reinstall=True)
@@ -200,15 +200,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
     def startAdb(self):
         try:
-            self.client = AdbClient(host="127.0.0.1", port=5037)
+            adbClient()
         except Exception:
-            os.system("adb devices")
-            try:
-                self.client = AdbClient(host="127.0.0.1", port=5037)
-            except Exception:
-                deviceBox, boxLayout = generateBox()
-                boxLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'))
-                self.scrollLayout.addWidget(deviceBox)
+            deviceBox, boxLayout = generateBox()
+            boxLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'))
+            self.scrollLayout.addWidget(deviceBox)
 
     def drawUi(self):
         self.installButtons.clear()
@@ -220,7 +216,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.boxes.update({'no_packet': deviceBox})
 
         connected_devices = getDevices()
-        if len(self.client.devices()) == 0:
+        if len(connected_devices) == 0:
 
             deviceBox, boxLayout = generateBox()
             boxLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
@@ -287,7 +283,7 @@ def checkDevicesActuality():
             except RuntimeError:
                 continue
 
-        connected_devices = getSerialsArray(ui.client.devices())
+        connected_devices = getSerialsArray(getDevices())
 
         for device in current_devices:
             if device not in connected_devices:
