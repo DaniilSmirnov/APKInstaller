@@ -16,20 +16,23 @@ def generateBox():
     return deviceBox, boxLayout
 
 
-class InfoBox(QtWidgets.QGroupBox):
+class Box(QtWidgets.QGroupBox):
+    def __init__(self, parent):
+        super(Box, self).__init__(parent)
+        self.boxLayout = QtWidgets.QGridLayout()
+        self.setLayout(self.boxLayout)
+
+
+class InfoBox(Box):
     def __init__(self, parent, text):
         super(InfoBox, self).__init__(parent)
-        deviceBox = QtWidgets.QGroupBox()
-        self.boxLayout = QtWidgets.QGridLayout(deviceBox)
-        deviceBox.setLayout(self.boxLayout)
         self.boxLayout.addWidget(QtWidgets.QLabel(text))
 
 
-class DeviceBox(QtWidgets.QGroupBox):
+class DeviceBox(Box):
     def __init__(self, parent, device):
         super(DeviceBox, self).__init__(parent)
         self.device = device
-        self.boxLayout = QtWidgets.QGridLayout()
         self.setLayout(self.boxLayout)
         self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.deviceName = QtWidgets.QLabel(getDeviceName(self.device))
@@ -149,16 +152,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         settings = get_settings()
 
-        settingsBox, boxLayout = generateBox()
+        settingsBox = Box(self.scrollWidget)
 
         packageLabel = QtWidgets.QLabel("Имя пакета приложения")
         packageInfoLabel = QtWidgets.QLabel("Можно ввести несколько через запятую")
 
         packageEdit = QtWidgets.QLineEdit(settings.get('package'))
 
-        boxLayout.addWidget(packageLabel)
-        boxLayout.addWidget(packageInfoLabel)
-        boxLayout.addWidget(packageEdit)
+        settingsBox.boxLayout.addWidget(packageLabel)
+        settingsBox.boxLayout.addWidget(packageInfoLabel)
+        settingsBox.boxLayout.addWidget(packageEdit)
 
         applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
 
