@@ -39,3 +39,13 @@ def getDeviceName(device):
 
 def getAndroidVersion(device):
     return "Android " + device.get_properties().get('ro.build.version.release')
+
+
+def getSerialsArray(devices):
+    response = []
+    for device in devices:
+        try:
+            response.append(device.get_serial_no())
+        except RuntimeError:
+            continue
+    return response

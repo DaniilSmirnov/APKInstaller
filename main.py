@@ -4,71 +4,12 @@ from PyQt5.QtCore import QTimer
 from threading import Timer
 
 from database import get_settings, set_settings, getPackages
-from utils import getDeviceName, getVersionCode, getAndroidVersion, getDevices, adbClient
+from groupbox import DeviceBox, InfoBox, Box
+from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 from fileedit import FileEdit
 
 
-def generateBox():
-    deviceBox = QtWidgets.QGroupBox()
-    boxLayout = QtWidgets.QGridLayout(deviceBox)
-    deviceBox.setLayout(boxLayout)
-
-    return deviceBox, boxLayout
-
-
-class Box(QtWidgets.QGroupBox):
-    def __init__(self, parent):
-        super(Box, self).__init__(parent)
-        self.boxLayout = QtWidgets.QGridLayout()
-        self.setLayout(self.boxLayout)
-
-
-class InfoBox(Box):
-    def __init__(self, parent, text):
-        super(InfoBox, self).__init__(parent)
-        self.boxLayout.addWidget(QtWidgets.QLabel(text))
-
-
-class DeviceBox(Box):
-    def __init__(self, parent, device):
-        super(DeviceBox, self).__init__(parent)
-        self.device = device
-        self.setLayout(self.boxLayout)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-        self.deviceName = QtWidgets.QLabel(getDeviceName(self.device))
-        self.deviceVersion = QtWidgets.QLabel(getAndroidVersion(self.device))
-        self.deviceVersionCode = QtWidgets.QLabel(getVersionCode(self.device, ui.getCurrentPackage()))
-
-        self.deviceVersion.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.deviceName.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-
-        self.installButton = QtWidgets.QPushButton("Установить")
-        self.deleteButton = QtWidgets.QPushButton("Удалить")
-        self.installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-        self.deleteButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-
-        self.installButton.clicked.connect(lambda state, target=device,
-                                                  button=self.installButton,
-                                                  delete_button=self.deleteButton,
-                                                  code=self.deviceVersionCode:
-                                           ui.install(target, button, delete_button, code))
-        self.deleteButton.clicked.connect(lambda state, target=device,
-                                                 button=self.deleteButton,
-                                                 code=self.deviceVersionCode:
-                                          ui.uninstall(target, button, code))
-
-        if self.deviceVersionCode.text().find('Не установлено') != -1:
-            self.deleteButton.setEnabled(False)
-
-        self.boxLayout.addWidget(self.deviceName, 0, 0, 1, 2)  # row, col. 2 нужна из-за двух кнопок в нижнем ряду
-        self.boxLayout.addWidget(self.deviceVersion, 1, 0, 1, 2)
-        self.boxLayout.addWidget(self.deviceVersionCode, 2, 0, 1, 2)
-        self.boxLayout.addWidget(self.installButton, 3, 0, 1, 1)
-        self.boxLayout.addWidget(self.deleteButton, 3, 1, 1, 1)
-
-
-class Ui_MainWindow(QtWidgets.QWidget):
+class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
 
@@ -146,6 +87,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.scrollLayout.itemAt(i).widget().deleteLater()
 
         self.openSettingsButton.setVisible(False)
+        self.allInstallButton.setVisible(False)
 
         applySettingsButton = QtWidgets.QPushButton("Применить")
         self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
@@ -176,7 +118,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
             applySettingsButton.deleteLater()
             applySettingsButton.setVisible(False)
-
+            self.allInstallButton.setVisible(True)
             self.openSettingsButton.setVisible(True)
             self.fillPackageSelector()
             self.drawUi()
@@ -214,7 +156,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         else:
             for device in connected_devices:
                 try:
-                    self.boxes.update({device.get_serial_no(): DeviceBox(self.scrollWidget, device)})
+                    self.boxes.update({device.get_serial_no(): DeviceBox(self.scrollWidget, device, ui)})
                     self.current_devices.append(device.get_serial_no())
                 except Exception:
                     continue
@@ -252,15 +194,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
 
 def checkDevicesActuality():
-    def getSerialsArray(devices):
-        response = []
-        for device in devices:
-            try:
-                response.append(device.get_serial_no())
-            except RuntimeError:
-                continue
-        return response
-
     if not ui.in_settings:
         connected_devices = getDevices()
         current_devices = ui.current_devices
@@ -268,7 +201,7 @@ def checkDevicesActuality():
         for device in connected_devices:
             try:
                 if device.get_serial_no() not in current_devices:
-                    new_device = DeviceBox(ui.scrollWidget, device)
+                    new_device = DeviceBox(ui.scrollWidget, device, ui)
                     ui.scrollLayout.addWidget(new_device)
                     ui.boxes.update({device.get_serial_no(): new_device})
             except RuntimeError:
@@ -292,7 +225,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon('icons/APK_icon.png'))
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
+    ui = Window()
     ui.setupUi()
     MainWindow.show()
 
