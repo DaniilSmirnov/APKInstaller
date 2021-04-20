@@ -4,60 +4,12 @@ from PyQt5.QtCore import QTimer
 from threading import Timer
 
 from database import get_settings, set_settings, getPackages
-from utils import getDeviceName, getVersionCode, getAndroidVersion, getDevices, adbClient
+from groupbox import DeviceBox, InfoBox, Box
+from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 from fileedit import FileEdit
 
 
-def generateBox():
-    deviceBox = QtWidgets.QGroupBox()
-    boxLayout = QtWidgets.QGridLayout(deviceBox)
-    deviceBox.setLayout(boxLayout)
-
-    return deviceBox, boxLayout
-
-
-def getDeviceBox(device):
-    deviceBox, boxLayout = generateBox()
-
-    deviceBox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-    deviceName = QtWidgets.QLabel(getDeviceName(device))
-    deviceName.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-    deviceVersion = QtWidgets.QLabel(getAndroidVersion(device))
-    deviceVersion.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-    deviceVersionCode = QtWidgets.QLabel(getVersionCode(device, ui.getCurrentPackage()))
-    deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-
-    installButton = QtWidgets.QPushButton("Установить")
-    deleteButton = QtWidgets.QPushButton("Удалить")
-    installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-    deleteButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-
-    installButton.clicked.connect(lambda state, target=device: ui.install(target))
-    deleteButton.clicked.connect(lambda state, target=device: ui.uninstall(target))
-    ui.installButtons.update({device: installButton})
-    ui.deleteButtons.update({device: deleteButton})
-    ui.builds.update({device: deviceVersionCode})
-
-    deviceName.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-    deviceVersion.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-    deviceVersionCode.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-
-    boxLayout.addWidget(deviceName, 0, 0, 1, 2)  # row, col. 2 нужна из-за двух кнопок в нижнем ряду
-    boxLayout.addWidget(deviceVersion, 1, 0, 1, 2)
-    boxLayout.addWidget(deviceVersionCode, 2, 0, 1, 2)
-    boxLayout.addWidget(installButton, 3, 0, 1, 1)
-    boxLayout.addWidget(deleteButton, 3, 1, 1, 1)
-
-    if deviceVersionCode.text().find('Не установлено') != -1:
-        deleteButton.setEnabled(False)
-
-    return deviceBox
-
-
-class Ui_MainWindow(QtWidgets.QWidget):
-    installButtons = {}
-    deleteButtons = {}
-    builds = {}
+class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
 
@@ -135,22 +87,23 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.scrollLayout.itemAt(i).widget().deleteLater()
 
         self.openSettingsButton.setVisible(False)
+        self.allInstallButton.setVisible(False)
 
         applySettingsButton = QtWidgets.QPushButton("Применить")
         self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
 
         settings = get_settings()
 
-        settingsBox, boxLayout = generateBox()
+        settingsBox = Box(self.scrollWidget)
 
         packageLabel = QtWidgets.QLabel("Имя пакета приложения")
         packageInfoLabel = QtWidgets.QLabel("Можно ввести несколько через запятую")
 
         packageEdit = QtWidgets.QLineEdit(settings.get('package'))
 
-        boxLayout.addWidget(packageLabel)
-        boxLayout.addWidget(packageInfoLabel)
-        boxLayout.addWidget(packageEdit)
+        settingsBox.boxLayout.addWidget(packageLabel)
+        settingsBox.boxLayout.addWidget(packageInfoLabel)
+        settingsBox.boxLayout.addWidget(packageEdit)
 
         applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
 
@@ -165,7 +118,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
             applySettingsButton.deleteLater()
             applySettingsButton.setVisible(False)
-
+            self.allInstallButton.setVisible(True)
             self.openSettingsButton.setVisible(True)
             self.fillPackageSelector()
             self.drawUi()
@@ -188,30 +141,22 @@ class Ui_MainWindow(QtWidgets.QWidget):
         try:
             adbClient()
         except Exception:
-            deviceBox, boxLayout = generateBox()
-            boxLayout.addWidget(QtWidgets.QLabel('ADB не может быть запущен'))
-            self.scrollLayout.addWidget(deviceBox)
+            self.scrollLayout.addWidget(InfoBox(self.scrollWidget, 'ADB не может быть запущен'))
 
     def drawUi(self):
-        self.installButtons.clear()
         self.cleanScrollLayout()
 
         if self.packageSelector.currentText() == 'Выбери пакет':
-            deviceBox, boxLayout = generateBox()
-            boxLayout.addWidget(QtWidgets.QLabel('Сначала нужно выбрать имя пакета'))
-            self.boxes.update({'no_packet': deviceBox})
+            self.boxes.update({'no_packet': InfoBox(self.scrollWidget, "Нужно указать имя пакета")})
 
         connected_devices = getDevices()
         if len(connected_devices) == 0:
-
-            deviceBox, boxLayout = generateBox()
-            boxLayout.addWidget(QtWidgets.QLabel('Устройства не обнаружены'))
-            self.boxes.update({'no_devices': deviceBox})
+            self.boxes.update({'no_devices': InfoBox(self.scrollWidget, 'Устройства не обнаружены')})
 
         else:
             for device in connected_devices:
                 try:
-                    self.boxes.update({device.get_serial_no(): getDeviceBox(device)})
+                    self.boxes.update({device.get_serial_no(): DeviceBox(self.scrollWidget, device, ui)})
                     self.current_devices.append(device.get_serial_no())
                 except Exception:
                     continue
@@ -225,37 +170,30 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def getPath(self):
         return self.fileDrop.placeholderText()
 
-    def install(self, device):
+    def install(self, device, button, delete_button, code):
         def deploy(device):
             try:
                 device.install(path=self.getPath(), reinstall=True)
+                button.setText('Установить')
+                delete_button.setEnabled(True)
+                code.setText(getVersionCode(device, self.getCurrentPackage()))
             except Exception:
-                self.installButtons.get(device).setText('Повторить')
-                return
-            self.installButtons.get(device).setText('Установить')
-            self.deleteButtons.get(device).setEnabled(True)
-            self.builds.get(device).setText(getVersionCode(device, self.getCurrentPackage()))
+                button.setText('Повторить')
 
-        self.installButtons.get(device).setText('Установка')
+        button.setText('Установка')
 
         Timer(0, deploy, args=[device]).start()
 
-    def uninstall(self, device):
-        device.uninstall(self.getCurrentPackage())
-        self.deleteButtons.get(device).setEnabled(False)
-        self.builds.get(device).setText(getVersionCode(device, self.getCurrentPackage()))
+    def uninstall(self, device, button, code):
+        try:
+            device.uninstall(self.getCurrentPackage())
+            button.setEnabled(False)
+            code.setText(getVersionCode(device, self.getCurrentPackage()))
+        except Exception:
+            button.setText('Повторить')
 
 
 def checkDevicesActuality():
-    def getSerialsArray(devices):
-        response = []
-        for device in devices:
-            try:
-                response.append(device.get_serial_no())
-            except RuntimeError:
-                continue
-        return response
-
     if not ui.in_settings:
         connected_devices = getDevices()
         current_devices = ui.current_devices
@@ -263,7 +201,7 @@ def checkDevicesActuality():
         for device in connected_devices:
             try:
                 if device.get_serial_no() not in current_devices:
-                    new_device = getDeviceBox(device)
+                    new_device = DeviceBox(ui.scrollWidget, device, ui)
                     ui.scrollLayout.addWidget(new_device)
                     ui.boxes.update({device.get_serial_no(): new_device})
             except RuntimeError:
@@ -287,7 +225,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon('icons/APK_icon.png'))
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
+    ui = Window()
     ui.setupUi()
     MainWindow.show()
 
