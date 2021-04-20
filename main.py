@@ -43,7 +43,7 @@ class Window(QtWidgets.QWidget):
         self.scrollArea.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
+        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.scrollWidget = QtWidgets.QWidget()
         self.scrollLayout = QtWidgets.QHBoxLayout(self.scrollWidget)
         self.scrollWidget.setLayout(self.scrollLayout)
@@ -198,23 +198,37 @@ def checkDevicesActuality():
         connected_devices = getDevices()
         current_devices = ui.current_devices
 
-        for device in connected_devices:
-            try:
-                if device.get_serial_no() not in current_devices:
-                    new_device = DeviceBox(ui.scrollWidget, device, ui)
-                    ui.scrollLayout.addWidget(new_device)
-                    ui.boxes.update({device.get_serial_no(): new_device})
-            except RuntimeError:
-                continue
+        if len(connected_devices) == 0:
+            ui.cleanScrollLayout()
+            info = InfoBox(ui.scrollWidget, 'Устройства не обнаружены')
+            ui.scrollLayout.addWidget(info)
+            ui.boxes.update({'no_devices': info})
 
-        connected_devices = getSerialsArray(getDevices())
-
-        for device in current_devices:
-            if device not in connected_devices:
-                widget = ui.boxes.get(device)
-                ui.boxes.pop(device)
+        if len(connected_devices) > 0:
+            widget = ui.boxes.get('no_devices')
+            if widget is not None:
+                ui.boxes.pop('no_devices')
                 ui.scrollLayout.removeWidget(widget)
                 widget.deleteLater()
+                return
+
+            for device in connected_devices:
+                try:
+                    if device.get_serial_no() not in current_devices:
+                        new_device = DeviceBox(ui.scrollWidget, device, ui)
+                        ui.scrollLayout.addWidget(new_device)
+                        ui.boxes.update({device.get_serial_no(): new_device})
+                except RuntimeError:
+                    continue
+
+            connected_devices = getSerialsArray(getDevices())
+
+            for device in current_devices:
+                if device not in connected_devices:
+                    widget = ui.boxes.get(device)
+                    ui.boxes.pop(device)
+                    ui.scrollLayout.removeWidget(widget)
+                    widget.deleteLater()
 
         ui.current_devices = connected_devices
     else:
