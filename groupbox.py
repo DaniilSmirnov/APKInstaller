@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QInputDialog
 
-from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI
+from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI
 
 
 class Box(QtWidgets.QGroupBox):
@@ -62,8 +62,7 @@ class DeviceBox(Box):
         self.boxLayout.addWidget(self.screenButton, 3, 2, 1, 1)
 
     def openDPI(self):
-        text, ok = QInputDialog.getInt(self, 'Установка DPI',
-                                       'Введите новый DPI:')
+        text, ok = QInputDialog.getInt(self, 'Установка DPI', 'Введите новый DPI:', getDPI(self.device), 100, 900, 10)
         if ok:
             self.applyDpi(text)
         else:

@@ -10,10 +10,6 @@ from utils import getVersionCode, getDevices, adbClient, getSerialsArray, getPer
 from fileedit import FileEdit
 
 
-# adb shell density
-# adb shel vmsize
-#
-
 class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}

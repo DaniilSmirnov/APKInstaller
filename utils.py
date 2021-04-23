@@ -57,6 +57,12 @@ def getPermissions(device, package):
     print(result)
 
 
+def getDPI(device):
+    cmd = 'wm density'
+    raw = device.shell(cmd).strip()
+    return int(re.findall('\d+', raw)[0])
+
+
 def setDPI(device, density):
     cmd = 'wm density ' + str(density)
     device.shell(cmd)
