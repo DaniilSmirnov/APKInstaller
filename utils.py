@@ -49,3 +49,34 @@ def getSerialsArray(devices):
         except RuntimeError:
             continue
     return response
+
+
+def getPermissions(device, package):
+    cmd = 'dumpsys package ' + package + ' | grep permission'
+    result = device.shell(cmd).strip()
+    print(result)
+
+
+def setDPI(device, density):
+    cmd = 'wm density ' + str(density)
+    device.shell(cmd)
+
+
+def resetDPI(device):
+    cmd = 'wm density reset'
+    device.shell(cmd)
+
+
+def getScreenSize(device):
+    cmd = 'wm size'
+    return device.shell(cmd).strip()
+
+
+def setScreenSize(device, x, y):
+    cmd = 'wm size ' + x + 'x' + y
+    device.shell(cmd).strip()
+
+
+def resetScreenSize(device):
+    cmd = 'wm size reset'
+    device.shell(cmd).strip()

@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QInputDialog
 
-from utils import getDeviceName, getAndroidVersion, getVersionCode
+from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI
 
 
 class Box(QtWidgets.QGroupBox):
@@ -32,8 +33,11 @@ class DeviceBox(Box):
 
         self.installButton = QtWidgets.QPushButton("Установить")
         self.deleteButton = QtWidgets.QPushButton("Удалить")
+        self.screenButton = QtWidgets.QPushButton("DPI")
+
         self.installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.deleteButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.screenButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
         self.installButton.clicked.connect(lambda state, target=device,
                                                   button=self.installButton,
@@ -45,6 +49,8 @@ class DeviceBox(Box):
                                                  code=self.deviceVersionCode:
                                           ui.uninstall(target, button, code))
 
+        self.screenButton.clicked.connect(self.openDPI)
+
         if self.deviceVersionCode.text().find('Не установлено') != -1:
             self.deleteButton.setEnabled(False)
 
@@ -53,3 +59,23 @@ class DeviceBox(Box):
         self.boxLayout.addWidget(self.deviceVersionCode, 2, 0, 1, 2)
         self.boxLayout.addWidget(self.installButton, 3, 0, 1, 1)
         self.boxLayout.addWidget(self.deleteButton, 3, 1, 1, 1)
+        self.boxLayout.addWidget(self.screenButton, 3, 2, 1, 1)
+
+    def openDPI(self):
+        text, ok = QInputDialog.getInt(self, 'Установка DPI',
+                                       'Введите новый DPI:')
+        if ok:
+            self.applyDpi(text)
+        else:
+            self.resetDpi()
+
+    def applyDpi(self, text):
+        setDPI(self.device, text)
+
+    def resetDpi(self):
+        resetDPI(self.device)
+
+
+class PlaceholderBox(Box):
+    def __init__(self, parent):
+        super(PlaceholderBox, self).__init__(parent)

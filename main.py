@@ -1,19 +1,24 @@
 import sys
-from multiprocessing import Process
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer
 from threading import Timer
 
 from database import get_settings, set_settings, getPackages
-from groupbox import DeviceBox, InfoBox, Box
-from utils import getVersionCode, getDevices, adbClient, getSerialsArray
+from groupbox import DeviceBox, InfoBox, PlaceholderBox, Box
+from utils import getVersionCode, getDevices, adbClient, getSerialsArray, getPermissions
 from fileedit import FileEdit
 
+
+# adb shell density
+# adb shel vmsize
+#
 
 class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
+    is_launch = True
+    need_force = False
 
     in_settings = False
 
@@ -61,17 +66,25 @@ class Window(QtWidgets.QWidget):
         MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
 
         self.startAdb()
+        self.drawPlaceHolders()
 
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
         self.packageSelector.currentTextChanged.connect(self.updateBuildCodes)
 
+    def drawPlaceHolders(self):
+        for i in range(0, 5):
+            self.scrollLayout.addWidget(PlaceholderBox(self.scrollWidget))
+
     def updateBuildCodes(self):
-        for box in self.boxes:
-            widget = self.boxes[box]
-            device = self.boxes[box].device
-            widget.deviceVersionCode.setText(getVersionCode(device, self.getCurrentPackage()))
+        try:
+            for box in self.boxes:
+                widget = self.boxes[box]
+                device = self.boxes[box].device
+                widget.deviceVersionCode.setText(getVersionCode(device, self.getCurrentPackage()))
+        except RuntimeError:
+            self.drawPlaceHolders()
 
     def getCurrentPackage(self):
         return self.packageSelector.currentText()
@@ -126,7 +139,7 @@ class Window(QtWidgets.QWidget):
         def saveSettings(url):
             text = url.text().strip()
             if not text.isspace():
-                set_settings(text)
+                Timer(0, set_settings, args=[text]).start()
 
             closeSettings()
 
@@ -141,6 +154,8 @@ class Window(QtWidgets.QWidget):
             self.packageSelector.setVisible(True)
             self.fileDrop.setVisible(True)
 
+            self.cleanScrollLayout()
+            self.need_force = True
             self.fillPackageSelector()
 
     def allInstall(self):
@@ -189,6 +204,23 @@ class Window(QtWidgets.QWidget):
 
 
 def checkDevicesActuality():
+    if ui.is_launch:
+        ui.cleanScrollLayout()
+        ui.is_launch = False
+
+    if ui.need_force:
+        ui.cleanScrollLayout()
+        connected_devices = getDevices()
+
+        for device in connected_devices:
+            new_device = DeviceBox(ui.scrollWidget, device, ui)
+            ui.scrollLayout.addWidget(new_device)
+            ui.boxes.update({device.get_serial_no(): new_device})
+
+        ui.current_devices = connected_devices
+        ui.need_force = False
+        return
+
     if not ui.in_settings:
         connected_devices = getDevices()
         current_devices = ui.current_devices
