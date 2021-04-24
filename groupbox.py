@@ -125,6 +125,7 @@ class DeviceBox(Box):
             permissionsCheck = QtWidgets.QCheckBox(permission.get('permission'))
             if permission.get('state'):
                 permissionsCheck.toggle()
+            permissionsCheck.setEnabled(False)
             permissionsCheck.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
             permissionsCheck.isChecked()
 
