@@ -1,7 +1,8 @@
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QInputDialog
 
-from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI
+from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, getScreenSize, \
+    setScreenSize, resetScreenSize
 
 
 class Box(QtWidgets.QGroupBox):
@@ -33,11 +34,13 @@ class DeviceBox(Box):
 
         self.installButton = QtWidgets.QPushButton("Установить")
         self.deleteButton = QtWidgets.QPushButton("Удалить")
-        self.screenButton = QtWidgets.QPushButton("DPI")
+
+        self.additionsButton = QtWidgets.QPushButton()
+        self.additionsButton.setIcon(QtGui.QIcon('icons/settings.png'))
+        self.additionsButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
         self.installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.deleteButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-        self.screenButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
         self.installButton.clicked.connect(lambda state, target=device,
                                                   button=self.installButton,
@@ -49,7 +52,7 @@ class DeviceBox(Box):
                                                  code=self.deviceVersionCode:
                                           ui.uninstall(target, button, code))
 
-        self.screenButton.clicked.connect(self.openDPI)
+        self.additionsButton.clicked.connect(self.openAdditional)
 
         if self.deviceVersionCode.text().find('Не установлено') != -1:
             self.deleteButton.setEnabled(False)
@@ -59,20 +62,59 @@ class DeviceBox(Box):
         self.boxLayout.addWidget(self.deviceVersionCode, 2, 0, 1, 2)
         self.boxLayout.addWidget(self.installButton, 3, 0, 1, 1)
         self.boxLayout.addWidget(self.deleteButton, 3, 1, 1, 1)
-        self.boxLayout.addWidget(self.screenButton, 3, 2, 1, 1)
+        self.boxLayout.addWidget(self.additionsButton, 3, 2, 1, 1)
+
+    def openAdditional(self):
+        self.cleanLayout()
+
+        self.additionsTitle = QtWidgets.QLabel("Настройки устройства")
+        self.additionsTitle.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.boxLayout.addWidget(self.additionsTitle, 0, 0, 1, 1)
+
+        self.screenDPIButton = QtWidgets.QPushButton("DPI")
+        self.screenDPIButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.screenDPIButton.clicked.connect(self.openDPI)
+        self.boxLayout.addWidget(self.screenDPIButton, 1, 0, 1, 1)
+
+        self.screenSizeButton = QtWidgets.QPushButton("Разрешение экрана")
+        self.screenSizeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.screenSizeButton.clicked.connect(self.screenSize)
+        self.boxLayout.addWidget(self.screenSizeButton, 2, 0, 1, 1)
+
+        self.closeButton = QtWidgets.QPushButton("Закрыть")
+        self.closeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.closeButton.clicked.connect(self.restoreLayout)
+        self.boxLayout.addWidget(self.closeButton, 3, 0, 1, 1)
 
     def openDPI(self):
-        text, ok = QInputDialog.getInt(self, 'Установка DPI', 'Введите новый DPI:', getDPI(self.device), 100, 900, 10)
+        text, ok = QInputDialog.getInt(self, 'Установка DPI',
+                                       'Введите новый DPI:',
+                                       getDPI(self.device), 100, 900, 10)
         if ok:
-            self.applyDpi(text)
+            setDPI(self.device, text)
         else:
-            self.resetDpi()
+            resetDPI(self.device)
 
-    def applyDpi(self, text):
-        setDPI(self.device, text)
+    def screenSize(self):
+        text, ok = QInputDialog.getText(self, 'Установка разрешения экрана',
+                                        'Введите новое разрешение экрана:')
+        if ok:
+            setScreenSize(self.device, text)
+        else:
+            resetScreenSize(self.device)
 
-    def resetDpi(self):
-        resetDPI(self.device)
+    def cleanLayout(self):
+        for i in range(self.boxLayout.count()):
+            self.boxLayout.itemAt(i).widget().setVisible(False)
+
+    def restoreLayout(self):
+        self.additionsTitle.deleteLater()
+        self.screenDPIButton.deleteLater()
+        self.screenSizeButton.deleteLater()
+        self.closeButton.deleteLater()
+
+        for i in range(self.boxLayout.count()):
+            self.boxLayout.itemAt(i).widget().setVisible(True)
 
 
 class PlaceholderBox(Box):

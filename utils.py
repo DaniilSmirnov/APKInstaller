@@ -75,11 +75,12 @@ def resetDPI(device):
 
 def getScreenSize(device):
     cmd = 'wm size'
-    return device.shell(cmd).strip()
+    raw = device.shell(cmd).strip()
+    return re.findall('([0-9]+)x([0-9]+)', raw)[0]
 
 
-def setScreenSize(device, x, y):
-    cmd = 'wm size ' + x + 'x' + y
+def setScreenSize(device, size):
+    cmd = 'wm size ' + size
     device.shell(cmd).strip()
 
 
