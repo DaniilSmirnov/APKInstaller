@@ -1,8 +1,8 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QInputDialog
 
-from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, getScreenSize, \
-    setScreenSize, resetScreenSize, getPermissions, setPermission, revokePermission
+from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
+    resetScreenSize, getPermissions, setPermission, revokePermission
 
 
 class Box(QtWidgets.QGroupBox):
