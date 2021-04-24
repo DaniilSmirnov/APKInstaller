@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QInputDialog
 
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, getScreenSize, \
-    setScreenSize, resetScreenSize
+    setScreenSize, resetScreenSize, getPermissions, setPermission, revokePermission
 
 
 class Box(QtWidgets.QGroupBox):
@@ -22,6 +22,8 @@ class DeviceBox(Box):
     def __init__(self, parent, device, ui):
         super(DeviceBox, self).__init__(parent)
         self.device = device
+        self.ui = ui
+        self.checkboxes = []
         self.setLayout(self.boxLayout)
         self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.deviceName = QtWidgets.QLabel(getDeviceName(self.device))
@@ -67,6 +69,8 @@ class DeviceBox(Box):
     def openAdditional(self):
         self.cleanLayout()
 
+        getPermissions(self.device, self.ui.getCurrentPackage())
+
         self.additionsTitle = QtWidgets.QLabel("Настройки устройства")
         self.additionsTitle.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.boxLayout.addWidget(self.additionsTitle, 0, 0, 1, 1)
@@ -81,10 +85,15 @@ class DeviceBox(Box):
         self.screenSizeButton.clicked.connect(self.screenSize)
         self.boxLayout.addWidget(self.screenSizeButton, 2, 0, 1, 1)
 
+        self.permissionsButton = QtWidgets.QPushButton("Разрешения")
+        self.permissionsButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.permissionsButton.clicked.connect(self.drawPermissions)
+        self.boxLayout.addWidget(self.permissionsButton, 3, 0, 1, 1)
+
         self.closeButton = QtWidgets.QPushButton("Закрыть")
         self.closeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.closeButton.clicked.connect(self.restoreLayout)
-        self.boxLayout.addWidget(self.closeButton, 3, 0, 1, 1)
+        self.boxLayout.addWidget(self.closeButton, 4, 0, 1, 1)
 
     def openDPI(self):
         text, ok = QInputDialog.getInt(self, 'Установка DPI',
@@ -103,15 +112,72 @@ class DeviceBox(Box):
         else:
             resetScreenSize(self.device)
 
+    def drawPermissions(self):
+        self.cleanLayout()
+        self.checkboxes = []
+
+        i = 0
+        j = 0
+
+        permissions = getPermissions(self.device, self.ui.getCurrentPackage())
+
+        for permission in permissions:
+            permissionsCheck = QtWidgets.QCheckBox(permission.get('permission'))
+            if permission.get('state'):
+                permissionsCheck.toggle()
+            permissionsCheck.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+            permissionsCheck.isChecked()
+
+            permissionsCheck.clicked.connect(lambda state, target=permissionsCheck:
+                                             togglePermission(target))
+
+            if i % 4 == 0:
+                j += 1
+                i = 0
+            self.boxLayout.addWidget(permissionsCheck, i, j, 1, 1)
+            self.checkboxes.append(permissionsCheck)
+            i += 1
+
+        self.closeButton = QtWidgets.QPushButton("Закрыть")
+        self.closeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.closeButton.clicked.connect(self.restoreLayout)
+        self.boxLayout.addWidget(self.closeButton, i, j, 1, 1)
+        self.checkboxes.append(self.closeButton)
+
+        def togglePermission(checkbox):
+            if checkbox.isChecked():
+                revokePermission(self.device, self.ui.getCurrentPackage(), checkbox.text())
+            else:
+                setPermission(self.device, self.ui.getCurrentPackage(), checkbox.text())
+
     def cleanLayout(self):
         for i in range(self.boxLayout.count()):
             self.boxLayout.itemAt(i).widget().setVisible(False)
 
+        try:
+            self.closeButton.deleteLater()
+        except Exception:
+            pass
+
+        for box in self.checkboxes:
+            box.setVisible(False)
+            box.deleteLater()
+        self.checkboxes = []
+
     def restoreLayout(self):
-        self.additionsTitle.deleteLater()
-        self.screenDPIButton.deleteLater()
-        self.screenSizeButton.deleteLater()
-        self.closeButton.deleteLater()
+        try:
+            self.additionsTitle.deleteLater()
+            self.screenDPIButton.deleteLater()
+            self.screenSizeButton.deleteLater()
+            self.permissionsButton.deleteLater()
+            self.closeButton.deleteLater()
+        except Exception:
+            pass
+
+        for box in self.checkboxes:
+            box.setVisible(False)
+            box.deleteLater()
+        self.checkboxes = []
 
         for i in range(self.boxLayout.count()):
             self.boxLayout.itemAt(i).widget().setVisible(True)

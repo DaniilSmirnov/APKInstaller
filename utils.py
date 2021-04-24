@@ -54,7 +54,25 @@ def getSerialsArray(devices):
 def getPermissions(device, package):
     cmd = 'dumpsys package ' + package + ' | grep permission'
     result = device.shell(cmd).strip()
-    print(result)
+    result = re.findall("        android\.permission\.([\w]+): granted=(true|false)", result)
+    response = []
+    for item in result:
+        response.append({
+            'permission': item[0],
+            'state': item[1] == 'true'
+        })
+
+    return response
+
+
+def revokePermission(device, package, permission):
+    cmd = 'pm revoke ' + package + ' android.permission.' + permission
+    device.shell(cmd)
+
+
+def setPermission(device, package, permission):
+    cmd = 'pm grant ' + package + ' android.permission.' + permission
+    device.shell(cmd)
 
 
 def getDPI(device):
