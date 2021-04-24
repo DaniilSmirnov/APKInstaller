@@ -127,7 +127,6 @@ class DeviceBox(Box):
                 permissionsCheck.toggle()
             permissionsCheck.setEnabled(False)
             permissionsCheck.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-            permissionsCheck.isChecked()
 
             permissionsCheck.clicked.connect(lambda state, target=permissionsCheck:
                                              togglePermission(target))
