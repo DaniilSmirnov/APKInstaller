@@ -49,3 +49,59 @@ def getSerialsArray(devices):
         except RuntimeError:
             continue
     return response
+
+
+def getPermissions(device, package):
+    cmd = 'dumpsys package ' + package + ' | grep permission'
+    result = device.shell(cmd).strip()
+    result = re.findall("        android\.permission\.([\w]+): granted=(true|false)", result)
+    response = []
+    for item in result:
+        response.append({
+            'permission': item[0],
+            'state': item[1] == 'true'
+        })
+
+    return response
+
+
+def revokePermission(device, package, permission):
+    cmd = 'pm revoke ' + package + ' android.permission.' + permission
+    device.shell(cmd)
+
+
+def setPermission(device, package, permission):
+    cmd = 'pm grant ' + package + ' android.permission.' + permission
+    device.shell(cmd)
+
+
+def getDPI(device):
+    cmd = 'wm density'
+    raw = device.shell(cmd).strip()
+    return int(re.findall('\d+', raw)[0])
+
+
+def setDPI(device, density):
+    cmd = 'wm density ' + str(density)
+    device.shell(cmd)
+
+
+def resetDPI(device):
+    cmd = 'wm density reset'
+    device.shell(cmd)
+
+
+def getScreenSize(device):
+    cmd = 'wm size'
+    raw = device.shell(cmd).strip()
+    return re.findall('([0-9]+)x([0-9]+)', raw)[0]
+
+
+def setScreenSize(device, size):
+    cmd = 'wm size ' + size
+    device.shell(cmd).strip()
+
+
+def resetScreenSize(device):
+    cmd = 'wm size reset'
+    device.shell(cmd).strip()

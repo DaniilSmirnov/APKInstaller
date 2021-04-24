@@ -1,17 +1,20 @@
 import sys
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer
 from threading import Timer
 
 from database import get_settings, set_settings, getPackages
-from groupbox import DeviceBox, InfoBox, Box
-from utils import getVersionCode, getDevices, adbClient, getSerialsArray
+from groupbox import DeviceBox, InfoBox, PlaceholderBox, Box
+from utils import getVersionCode, getDevices, adbClient, getSerialsArray, getPermissions
 from fileedit import FileEdit
 
 
 class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
+    is_launch = True
+    need_force = False
 
     in_settings = False
 
@@ -22,6 +25,7 @@ class Window(QtWidgets.QWidget):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.mainLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.mainLayout.setVerticalSpacing(0)
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.fileDrop = FileEdit(self.centralwidget)
@@ -29,6 +33,7 @@ class Window(QtWidgets.QWidget):
 
         self.packageSelector = QtWidgets.QComboBox()
         self.mainLayout.addWidget(self.packageSelector, 0, 1, 1, 1)
+        self.packageSelector.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.fillPackageSelector()
 
         self.allInstallButton = QtWidgets.QPushButton("Установить на все")
@@ -43,7 +48,7 @@ class Window(QtWidgets.QWidget):
         self.scrollArea.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
+        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.scrollWidget = QtWidgets.QWidget()
         self.scrollLayout = QtWidgets.QHBoxLayout(self.scrollWidget)
         self.scrollWidget.setLayout(self.scrollLayout)
@@ -57,12 +62,25 @@ class Window(QtWidgets.QWidget):
         MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
 
         self.startAdb()
-        self.drawUi()
+        self.drawPlaceHolders()
 
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
-        self.packageSelector.currentTextChanged.connect(self.drawUi)
+        self.packageSelector.currentTextChanged.connect(self.updateBuildCodes)
+
+    def drawPlaceHolders(self):
+        for i in range(0, 5):
+            self.scrollLayout.addWidget(PlaceholderBox(self.scrollWidget))
+
+    def updateBuildCodes(self):
+        try:
+            for box in self.boxes:
+                widget = self.boxes[box]
+                device = self.boxes[box].device
+                widget.deviceVersionCode.setText(getVersionCode(device, self.getCurrentPackage()))
+        except RuntimeError:
+            self.drawPlaceHolders()
 
     def getCurrentPackage(self):
         return self.packageSelector.currentText()
@@ -88,9 +106,16 @@ class Window(QtWidgets.QWidget):
 
         self.openSettingsButton.setVisible(False)
         self.allInstallButton.setVisible(False)
+        self.packageSelector.setVisible(False)
+        self.fileDrop.setVisible(False)
 
         applySettingsButton = QtWidgets.QPushButton("Применить")
         self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
+        applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
+
+        closeSettingsButton = QtWidgets.QPushButton("Назад")
+        self.mainLayout.addWidget(closeSettingsButton, 0, 3, 1, 1)
+        closeSettingsButton.clicked.connect(lambda state: closeSettings())
 
         settings = get_settings()
 
@@ -105,23 +130,29 @@ class Window(QtWidgets.QWidget):
         settingsBox.boxLayout.addWidget(packageInfoLabel)
         settingsBox.boxLayout.addWidget(packageEdit)
 
-        applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
-
         self.scrollLayout.addWidget(settingsBox)
 
         def saveSettings(url):
             text = url.text().strip()
             if not text.isspace():
-                set_settings(text)
+                Timer(0, set_settings, args=[text]).start()
 
-            self.in_settings = False
+            closeSettings()
 
-            applySettingsButton.deleteLater()
+        def closeSettings():
             applySettingsButton.setVisible(False)
+            closeSettingsButton.setVisible(False)
+            applySettingsButton.deleteLater()
+            closeSettingsButton.deleteLater()
+
             self.allInstallButton.setVisible(True)
             self.openSettingsButton.setVisible(True)
+            self.packageSelector.setVisible(True)
+            self.fileDrop.setVisible(True)
+
+            self.cleanScrollLayout()
+            self.need_force = True
             self.fillPackageSelector()
-            self.drawUi()
 
     def allInstall(self):
         connected_devices = getDevices()
@@ -131,7 +162,6 @@ class Window(QtWidgets.QWidget):
             except Exception:
                 return
         self.cleanScrollLayout()
-        self.drawUi()
 
     def cleanScrollLayout(self):
         for i in range(self.scrollLayout.count()):
@@ -142,30 +172,6 @@ class Window(QtWidgets.QWidget):
             adbClient()
         except Exception:
             self.scrollLayout.addWidget(InfoBox(self.scrollWidget, 'ADB не может быть запущен'))
-
-    def drawUi(self):
-        self.cleanScrollLayout()
-
-        if self.packageSelector.currentText() == 'Выбери пакет':
-            self.boxes.update({'no_packet': InfoBox(self.scrollWidget, "Нужно указать имя пакета")})
-
-        connected_devices = getDevices()
-        if len(connected_devices) == 0:
-            self.boxes.update({'no_devices': InfoBox(self.scrollWidget, 'Устройства не обнаружены')})
-
-        else:
-            for device in connected_devices:
-                try:
-                    self.boxes.update({device.get_serial_no(): DeviceBox(self.scrollWidget, device, ui)})
-                    self.current_devices.append(device.get_serial_no())
-                except Exception:
-                    continue
-
-        self.drawDevices()
-
-    def drawDevices(self):
-        for box in self.boxes:
-            self.scrollLayout.addWidget(self.boxes[box])
 
     def getPath(self):
         return self.fileDrop.placeholderText()
@@ -194,27 +200,58 @@ class Window(QtWidgets.QWidget):
 
 
 def checkDevicesActuality():
+    if ui.is_launch:
+        ui.cleanScrollLayout()
+        ui.is_launch = False
+
+    if ui.need_force:
+        ui.cleanScrollLayout()
+        connected_devices = getDevices()
+
+        for device in connected_devices:
+            new_device = DeviceBox(ui.scrollWidget, device, ui)
+            ui.scrollLayout.addWidget(new_device)
+            ui.boxes.update({device.get_serial_no(): new_device})
+
+        ui.current_devices = connected_devices
+        ui.need_force = False
+        return
+
     if not ui.in_settings:
         connected_devices = getDevices()
         current_devices = ui.current_devices
 
-        for device in connected_devices:
-            try:
-                if device.get_serial_no() not in current_devices:
-                    new_device = DeviceBox(ui.scrollWidget, device, ui)
-                    ui.scrollLayout.addWidget(new_device)
-                    ui.boxes.update({device.get_serial_no(): new_device})
-            except RuntimeError:
-                continue
+        if len(connected_devices) == 0:
+            ui.cleanScrollLayout()
+            info = InfoBox(ui.scrollWidget, 'Устройства не обнаружены')
+            ui.scrollLayout.addWidget(info)
+            ui.boxes.update({'no_devices': info})
 
-        connected_devices = getSerialsArray(getDevices())
-
-        for device in current_devices:
-            if device not in connected_devices:
-                widget = ui.boxes.get(device)
-                ui.boxes.pop(device)
+        if len(connected_devices) > 0:
+            widget = ui.boxes.get('no_devices')
+            if widget is not None:
+                ui.boxes.pop('no_devices')
                 ui.scrollLayout.removeWidget(widget)
                 widget.deleteLater()
+                return
+
+            for device in connected_devices:
+                try:
+                    if device.get_serial_no() not in current_devices:
+                        new_device = DeviceBox(ui.scrollWidget, device, ui)
+                        ui.scrollLayout.addWidget(new_device)
+                        ui.boxes.update({device.get_serial_no(): new_device})
+                except RuntimeError:
+                    continue
+
+            connected_devices = getSerialsArray(getDevices())
+
+            for device in current_devices:
+                if device not in connected_devices:
+                    widget = ui.boxes.get(device)
+                    ui.boxes.pop(device)
+                    ui.scrollLayout.removeWidget(widget)
+                    widget.deleteLater()
 
         ui.current_devices = connected_devices
     else:
