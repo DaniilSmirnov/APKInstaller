@@ -10,12 +10,10 @@ def create_db():
     conn, cursor = get_conn()
 
     cursor.execute('CREATE TABLE "settings" ("package" TEXT);')
-
     conn.commit()
 
     query = 'insert into settings values ("com.android.chrome");'
     cursor.execute(query)
-
     conn.commit()
 
 
@@ -28,7 +26,6 @@ def set_settings(url):
 
 
 def get_settings():
-
     conn, cursor = get_conn()
     query = 'select * from settings;'
     try:
