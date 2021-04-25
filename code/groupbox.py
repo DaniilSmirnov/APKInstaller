@@ -1,8 +1,9 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QInputDialog
 
-from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, getScreenSize, \
-    setScreenSize, resetScreenSize, getPermissions, setPermission, revokePermission
+from spinner import QtWaitingSpinner
+from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
+    resetScreenSize, getPermissions, setPermission, revokePermission
 
 
 class Box(QtWidgets.QGroupBox):
@@ -38,7 +39,7 @@ class DeviceBox(Box):
         self.deleteButton = QtWidgets.QPushButton("Удалить")
 
         self.additionsButton = QtWidgets.QPushButton()
-        self.additionsButton.setIcon(QtGui.QIcon('icons/settings.png'))
+        self.additionsButton.setIcon(QtGui.QIcon('./icons/settings.png'))
         self.additionsButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
         self.installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
@@ -75,15 +76,15 @@ class DeviceBox(Box):
         self.additionsTitle.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.boxLayout.addWidget(self.additionsTitle, 0, 0, 1, 1)
 
-        self.screenDPIButton = QtWidgets.QPushButton("DPI")
-        self.screenDPIButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-        self.screenDPIButton.clicked.connect(self.openDPI)
-        self.boxLayout.addWidget(self.screenDPIButton, 1, 0, 1, 1)
-
         self.screenSizeButton = QtWidgets.QPushButton("Разрешение экрана")
         self.screenSizeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.screenSizeButton.clicked.connect(self.screenSize)
         self.boxLayout.addWidget(self.screenSizeButton, 2, 0, 1, 1)
+
+        self.screenDPIButton = QtWidgets.QPushButton("DPI")
+        self.screenDPIButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.screenDPIButton.clicked.connect(self.openDPI)
+        self.boxLayout.addWidget(self.screenDPIButton, 2, 1, 1, 1)
 
         self.permissionsButton = QtWidgets.QPushButton("Разрешения")
         self.permissionsButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
@@ -125,7 +126,6 @@ class DeviceBox(Box):
             permissionsCheck = QtWidgets.QCheckBox(permission.get('permission'))
             if permission.get('state'):
                 permissionsCheck.toggle()
-            permissionsCheck.setEnabled(False)
             permissionsCheck.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
             permissionsCheck.clicked.connect(lambda state, target=permissionsCheck:
@@ -145,7 +145,7 @@ class DeviceBox(Box):
         self.checkboxes.append(self.closeButton)
 
         def togglePermission(checkbox):
-            if checkbox.isChecked():
+            if not checkbox.isChecked():
                 revokePermission(self.device, self.ui.getCurrentPackage(), checkbox.text())
             else:
                 setPermission(self.device, self.ui.getCurrentPackage(), checkbox.text())
@@ -186,3 +186,6 @@ class DeviceBox(Box):
 class PlaceholderBox(Box):
     def __init__(self, parent):
         super(PlaceholderBox, self).__init__(parent)
+        spinner = QtWaitingSpinner()
+        spinner.start()
+        self.boxLayout.addWidget(spinner, 0, 0, 1, 1)

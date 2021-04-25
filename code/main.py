@@ -6,7 +6,7 @@ from threading import Timer
 
 from database import get_settings, set_settings, getPackages
 from groupbox import DeviceBox, InfoBox, PlaceholderBox, Box
-from utils import getVersionCode, getDevices, adbClient, getSerialsArray, getPermissions
+from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 from fileedit import FileEdit
 
 
@@ -21,7 +21,7 @@ class Window(QtWidgets.QWidget):
     def setupUi(self):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(500, 180)
-        MainWindow.setWindowIcon(QtGui.QIcon('icons/APK_icon.png'))
+        MainWindow.setWindowIcon(QtGui.QIcon('./icons/APK_icon.png'))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.mainLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -40,7 +40,7 @@ class Window(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
         self.openSettingsButton = QtWidgets.QPushButton()
-        self.openSettingsButton.setIcon(QtGui.QIcon('icons/settings.png'))
+        self.openSettingsButton.setIcon(QtGui.QIcon('./icons/settings.png'))
         self.openSettingsButton.setToolTip('Открыть настройки')
         self.mainLayout.addWidget(self.openSettingsButton, 0, 3, 1, 1)
 
@@ -260,7 +260,7 @@ def checkDevicesActuality():
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('icons/APK_icon.png'))
+    app.setWindowIcon(QtGui.QIcon('./icons/APK_icon.png'))
     MainWindow = QtWidgets.QMainWindow()
     ui = Window()
     ui.setupUi()
