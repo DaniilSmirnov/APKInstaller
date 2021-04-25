@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QInputDialog
 
+from spinner import QtWaitingSpinner
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
     resetScreenSize, getPermissions, setPermission, revokePermission
 
@@ -185,3 +186,6 @@ class DeviceBox(Box):
 class PlaceholderBox(Box):
     def __init__(self, parent):
         super(PlaceholderBox, self).__init__(parent)
+        spinner = QtWaitingSpinner()
+        spinner.start()
+        self.boxLayout.addWidget(spinner, 0, 0, 1, 1)
