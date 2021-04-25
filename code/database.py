@@ -2,17 +2,14 @@ import sqlite3
 
 
 def get_conn():
-    conn = sqlite3.connect('settings.db')
+    conn = sqlite3.connect('./settings.db')
     return conn, conn.cursor()
 
 
 def create_db():
     conn, cursor = get_conn()
 
-    cursor.execute('''
-    CREATE TABLE "settings" (
-	"package" TEXT);
-    ''')
+    cursor.execute('CREATE TABLE "settings" ("package" TEXT);')
 
     conn.commit()
 

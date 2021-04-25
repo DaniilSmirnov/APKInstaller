@@ -38,7 +38,7 @@ class DeviceBox(Box):
         self.deleteButton = QtWidgets.QPushButton("Удалить")
 
         self.additionsButton = QtWidgets.QPushButton()
-        self.additionsButton.setIcon(QtGui.QIcon('icons/settings.png'))
+        self.additionsButton.setIcon(QtGui.QIcon('./icons/settings.png'))
         self.additionsButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
         self.installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
