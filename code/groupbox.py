@@ -138,17 +138,48 @@ class DeviceBox(Box):
             self.checkboxes.append(permissionsCheck)
             i += 1
 
+        i = 0
+        j += 1
         self.closeButton = QtWidgets.QPushButton("Закрыть")
         self.closeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.closeButton.clicked.connect(self.restoreLayout)
         self.boxLayout.addWidget(self.closeButton, i, j, 1, 1)
         self.checkboxes.append(self.closeButton)
+        i += 1
+
+        self.grantAllButton = QtWidgets.QPushButton("Выдать все")
+        self.grantAllButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.grantAllButton.clicked.connect(lambda state, target=permissions:
+                                            grantAll(target))
+        self.boxLayout.addWidget(self.grantAllButton, i, j, 1, 1)
+        self.checkboxes.append(self.grantAllButton)
+        i += 1
+
+        self.revokeAllButton = QtWidgets.QPushButton("Забрать все")
+        self.revokeAllButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.revokeAllButton.clicked.connect(lambda state, target=permissions:
+                                             revokeAll(target))
+        self.boxLayout.addWidget(self.revokeAllButton, i, j, 1, 1)
+        self.checkboxes.append(self.revokeAllButton)
+        i += 1
 
         def togglePermission(checkbox):
             if not checkbox.isChecked():
                 revokePermission(self.device, self.ui.getCurrentPackage(), checkbox.text())
             else:
                 setPermission(self.device, self.ui.getCurrentPackage(), checkbox.text())
+
+        def grantAll(permissions):
+            for permission in permissions:
+                setPermission(self.device, self.ui.getCurrentPackage(), permission.get('permission'))
+                self.cleanLayout()
+                self.drawPermissions()
+
+        def revokeAll(permissions):
+            for permission in permissions:
+                revokePermission(self.device, self.ui.getCurrentPackage(), permission.get('permission'))
+                self.cleanLayout()
+                self.drawPermissions()
 
     def cleanLayout(self):
         for i in range(self.boxLayout.count()):
