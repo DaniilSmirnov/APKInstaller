@@ -15,7 +15,6 @@ class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
     is_launch = True
-
     in_settings = False
 
     def setupUi(self):
@@ -145,12 +144,10 @@ class Window(QtWidgets.QWidget):
             self.fillPackageSelector()
 
     def allInstall(self):
-        connected_devices = getDevices()
-        for device in connected_devices:
-            try:
-                device.install(path=self.getPath(), reinstall=True)
-            except Exception:
-                continue
+        for box in self.boxes:
+            widget = self.boxes[box]
+            device = widget.device
+            self.install(device, widget.installButton, widget.deleteButton, widget.deviceVersionCode)
 
     def cleanScrollLayout(self):
         for i in range(self.scrollLayout.count()):

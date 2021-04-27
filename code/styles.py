@@ -24,6 +24,7 @@ def getButton(text):
     button = QtWidgets.QPushButton(text)
     button.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
     button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+
     return button
 
 
