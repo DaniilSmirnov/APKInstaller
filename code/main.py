@@ -15,7 +15,6 @@ class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
     is_launch = True
-    need_force = False
 
     in_settings = False
 
@@ -75,7 +74,7 @@ class Window(QtWidgets.QWidget):
                 device = self.boxes[box].device
                 widget.deviceVersionCode.setText(getVersionCode(device, self.getCurrentPackage()))
         except RuntimeError:
-            self.drawPlaceHolders()
+            pass
 
     def getCurrentPackage(self):
         return self.packageSelector.currentText()
@@ -96,9 +95,7 @@ class Window(QtWidgets.QWidget):
     def openSettings(self):
         self.in_settings = True
 
-        for i in range(self.scrollLayout.count()):
-            self.scrollLayout.itemAt(i).widget().deleteLater()
-
+        self.setBoxesVisibility(False)
         self.openSettingsButton.setVisible(False)
         self.allInstallButton.setVisible(False)
         self.packageSelector.setVisible(False)
@@ -135,18 +132,16 @@ class Window(QtWidgets.QWidget):
             closeSettings()
 
         def closeSettings():
-            applySettingsButton.setVisible(False)
-            closeSettingsButton.setVisible(False)
             applySettingsButton.deleteLater()
             closeSettingsButton.deleteLater()
+            settingsBox.deleteLater()
 
             self.allInstallButton.setVisible(True)
             self.openSettingsButton.setVisible(True)
             self.packageSelector.setVisible(True)
             self.fileDrop.setVisible(True)
+            self.setBoxesVisibility(True)
 
-            self.cleanScrollLayout()
-            self.need_force = True
             self.fillPackageSelector()
 
     def allInstall(self):
@@ -155,12 +150,15 @@ class Window(QtWidgets.QWidget):
             try:
                 device.install(path=self.getPath(), reinstall=True)
             except Exception:
-                return
-        self.cleanScrollLayout()
+                continue
 
     def cleanScrollLayout(self):
         for i in range(self.scrollLayout.count()):
             self.scrollLayout.itemAt(i).widget().deleteLater()
+
+    def setBoxesVisibility(self, visibility):
+        for box in self.boxes:
+            self.boxes[box].setVisible(visibility)
 
     def startAdb(self):
         try:
@@ -198,19 +196,6 @@ def checkDevicesActuality():
     if ui.is_launch:
         ui.cleanScrollLayout()
         ui.is_launch = False
-
-    if ui.need_force:
-        ui.cleanScrollLayout()
-        connected_devices = getDevices()
-
-        for device in connected_devices:
-            new_device = DeviceBox(ui.scrollWidget, device, ui)
-            ui.scrollLayout.addWidget(new_device)
-            ui.boxes.update({device.get_serial_no(): new_device})
-
-        ui.current_devices = connected_devices
-        ui.need_force = False
-        return
 
     if not ui.in_settings:
         connected_devices = getDevices()

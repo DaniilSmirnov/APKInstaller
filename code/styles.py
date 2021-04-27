@@ -3,10 +3,12 @@ from PyQt5.QtGui import QColor, QPixmap
 
 color = '#3F8AE0'
 
-iconButtonStyleSheet = '''QPushButton{
+iconButtonStyleSheet = '''
+QPushButton{
 	color: transparent;
 	background-color: transparent;
-}'''
+}
+'''
 
 
 def getIcon(path):
