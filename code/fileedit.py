@@ -7,7 +7,7 @@ class FileEdit(QtWidgets.QLineEdit):
         super(FileEdit, self).__init__(parent)
 
         self.setDragEnabled(True)
-        self.setPlaceholderText('Закинь файл через drag n drop или нажми для выбора')
+        self.setPlaceholderText('Поместите сюда файл через drag n drop или нажмите для выбора')
 
     clicked = pyqtSignal()
 

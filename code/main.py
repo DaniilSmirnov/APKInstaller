@@ -4,6 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer
 from threading import Timer
 
+from styles import getIconButton, getButton
 from database import get_settings, set_settings, getPackages
 from groupbox import DeviceBox, InfoBox, PlaceholderBox, Box
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
@@ -14,13 +15,11 @@ class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
     is_launch = True
-    need_force = False
-
     in_settings = False
 
     def setupUi(self):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(500, 180)
+        MainWindow.resize(520, 200)
         MainWindow.setWindowIcon(QtGui.QIcon('./icons/APK_icon.png'))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -36,30 +35,24 @@ class Window(QtWidgets.QWidget):
         self.packageSelector.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.fillPackageSelector()
 
-        self.allInstallButton = QtWidgets.QPushButton("Установить на все")
+        self.allInstallButton = getButton("Установить на все")
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
-        self.openSettingsButton = QtWidgets.QPushButton()
-        self.openSettingsButton.setIcon(QtGui.QIcon('./icons/settings.png'))
-        self.openSettingsButton.setToolTip('Открыть настройки')
+        self.openSettingsButton = getIconButton('./icons/settings.png')
         self.mainLayout.addWidget(self.openSettingsButton, 0, 3, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.scrollArea.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
         self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.verticalScrollBar().setEnabled(False)
         self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.scrollWidget = QtWidgets.QWidget()
         self.scrollLayout = QtWidgets.QHBoxLayout(self.scrollWidget)
         self.scrollWidget.setLayout(self.scrollLayout)
         self.scrollArea.setWidget(self.scrollWidget)
 
-        self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "APK Installer"))
 
         self.startAdb()
         self.drawPlaceHolders()
@@ -80,7 +73,7 @@ class Window(QtWidgets.QWidget):
                 device = self.boxes[box].device
                 widget.deviceVersionCode.setText(getVersionCode(device, self.getCurrentPackage()))
         except RuntimeError:
-            self.drawPlaceHolders()
+            pass
 
     def getCurrentPackage(self):
         return self.packageSelector.currentText()
@@ -101,19 +94,17 @@ class Window(QtWidgets.QWidget):
     def openSettings(self):
         self.in_settings = True
 
-        for i in range(self.scrollLayout.count()):
-            self.scrollLayout.itemAt(i).widget().deleteLater()
-
+        self.setBoxesVisibility(False)
         self.openSettingsButton.setVisible(False)
         self.allInstallButton.setVisible(False)
         self.packageSelector.setVisible(False)
         self.fileDrop.setVisible(False)
 
-        applySettingsButton = QtWidgets.QPushButton("Применить")
+        applySettingsButton = getButton("Применить")
         self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
         applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
 
-        closeSettingsButton = QtWidgets.QPushButton("Назад")
+        closeSettingsButton = getButton("Назад")
         self.mainLayout.addWidget(closeSettingsButton, 0, 3, 1, 1)
         closeSettingsButton.clicked.connect(lambda state: closeSettings())
 
@@ -140,32 +131,31 @@ class Window(QtWidgets.QWidget):
             closeSettings()
 
         def closeSettings():
-            applySettingsButton.setVisible(False)
-            closeSettingsButton.setVisible(False)
             applySettingsButton.deleteLater()
             closeSettingsButton.deleteLater()
+            settingsBox.deleteLater()
 
             self.allInstallButton.setVisible(True)
             self.openSettingsButton.setVisible(True)
             self.packageSelector.setVisible(True)
             self.fileDrop.setVisible(True)
+            self.setBoxesVisibility(True)
 
-            self.cleanScrollLayout()
-            self.need_force = True
             self.fillPackageSelector()
 
     def allInstall(self):
-        connected_devices = getDevices()
-        for device in connected_devices:
-            try:
-                device.install(path=self.getPath(), reinstall=True)
-            except Exception:
-                return
-        self.cleanScrollLayout()
+        for box in self.boxes:
+            widget = self.boxes[box]
+            device = widget.device
+            self.install(device, widget.installButton, widget.deleteButton, widget.deviceVersionCode)
 
     def cleanScrollLayout(self):
         for i in range(self.scrollLayout.count()):
             self.scrollLayout.itemAt(i).widget().deleteLater()
+
+    def setBoxesVisibility(self, visibility):
+        for box in self.boxes:
+            self.boxes[box].setVisible(visibility)
 
     def startAdb(self):
         try:
@@ -203,19 +193,6 @@ def checkDevicesActuality():
     if ui.is_launch:
         ui.cleanScrollLayout()
         ui.is_launch = False
-
-    if ui.need_force:
-        ui.cleanScrollLayout()
-        connected_devices = getDevices()
-
-        for device in connected_devices:
-            new_device = DeviceBox(ui.scrollWidget, device, ui)
-            ui.scrollLayout.addWidget(new_device)
-            ui.boxes.update({device.get_serial_no(): new_device})
-
-        ui.current_devices = connected_devices
-        ui.need_force = False
-        return
 
     if not ui.in_settings:
         connected_devices = getDevices()

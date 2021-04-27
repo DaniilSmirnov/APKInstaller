@@ -67,13 +67,11 @@ def getPermissions(device, package):
 
 def revokePermission(device, package, permission):
     cmd = 'pm revoke ' + package + ' android.permission.' + permission
-    print(cmd)
     device.shell(cmd)
 
 
 def setPermission(device, package, permission):
     cmd = 'pm grant ' + package + ' android.permission.' + permission
-    print(cmd)
     device.shell(cmd)
 
 

@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QInputDialog
 
+from styles import getButton, getIconButton
 from spinner import QtWaitingSpinner
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
     resetScreenSize, getPermissions, setPermission, revokePermission
@@ -9,6 +10,7 @@ from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, rese
 class Box(QtWidgets.QGroupBox):
     def __init__(self, parent):
         super(Box, self).__init__(parent)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.boxLayout = QtWidgets.QGridLayout()
         self.setLayout(self.boxLayout)
 
@@ -25,8 +27,6 @@ class DeviceBox(Box):
         self.device = device
         self.ui = ui
         self.checkboxes = []
-        self.setLayout(self.boxLayout)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.deviceName = QtWidgets.QLabel(getDeviceName(self.device))
         self.deviceVersion = QtWidgets.QLabel(getAndroidVersion(self.device))
         self.deviceVersionCode = QtWidgets.QLabel(getVersionCode(self.device, ui.getCurrentPackage()))
@@ -35,15 +35,9 @@ class DeviceBox(Box):
         self.deviceName.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
 
-        self.installButton = QtWidgets.QPushButton("Установить")
-        self.deleteButton = QtWidgets.QPushButton("Удалить")
-
-        self.additionsButton = QtWidgets.QPushButton()
-        self.additionsButton.setIcon(QtGui.QIcon('./icons/settings.png'))
-        self.additionsButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-
-        self.installButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-        self.deleteButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.installButton = getButton("Установить")
+        self.deleteButton = getButton("Удалить")
+        self.additionsButton = getIconButton('./icons/settings.png')
 
         self.installButton.clicked.connect(lambda state, target=device,
                                                   button=self.installButton,
@@ -76,23 +70,19 @@ class DeviceBox(Box):
         self.additionsTitle.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.boxLayout.addWidget(self.additionsTitle, 0, 0, 1, 1)
 
-        self.screenSizeButton = QtWidgets.QPushButton("Разрешение экрана")
-        self.screenSizeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.screenSizeButton = getButton("Разрешение экрана")
         self.screenSizeButton.clicked.connect(self.screenSize)
         self.boxLayout.addWidget(self.screenSizeButton, 2, 0, 1, 1)
 
-        self.screenDPIButton = QtWidgets.QPushButton("DPI")
-        self.screenDPIButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.screenDPIButton = getButton("DPI")
         self.screenDPIButton.clicked.connect(self.openDPI)
         self.boxLayout.addWidget(self.screenDPIButton, 2, 1, 1, 1)
 
-        self.permissionsButton = QtWidgets.QPushButton("Разрешения")
-        self.permissionsButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.permissionsButton = getButton("Разрешения")
         self.permissionsButton.clicked.connect(self.drawPermissions)
         self.boxLayout.addWidget(self.permissionsButton, 3, 0, 1, 1)
 
-        self.closeButton = QtWidgets.QPushButton("Закрыть")
-        self.closeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.closeButton = getButton("Закрыть")
         self.closeButton.clicked.connect(self.restoreLayout)
         self.boxLayout.addWidget(self.closeButton, 4, 0, 1, 1)
 
@@ -138,17 +128,48 @@ class DeviceBox(Box):
             self.checkboxes.append(permissionsCheck)
             i += 1
 
+        i = 0
+        j += 1
         self.closeButton = QtWidgets.QPushButton("Закрыть")
         self.closeButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.closeButton.clicked.connect(self.restoreLayout)
         self.boxLayout.addWidget(self.closeButton, i, j, 1, 1)
         self.checkboxes.append(self.closeButton)
+        i += 1
+
+        self.grantAllButton = QtWidgets.QPushButton("Выдать все")
+        self.grantAllButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.grantAllButton.clicked.connect(lambda state, target=permissions:
+                                            grantAll(target))
+        self.boxLayout.addWidget(self.grantAllButton, i, j, 1, 1)
+        self.checkboxes.append(self.grantAllButton)
+        i += 1
+
+        self.revokeAllButton = QtWidgets.QPushButton("Забрать все")
+        self.revokeAllButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.revokeAllButton.clicked.connect(lambda state, target=permissions:
+                                             revokeAll(target))
+        self.boxLayout.addWidget(self.revokeAllButton, i, j, 1, 1)
+        self.checkboxes.append(self.revokeAllButton)
+        i += 1
 
         def togglePermission(checkbox):
             if not checkbox.isChecked():
                 revokePermission(self.device, self.ui.getCurrentPackage(), checkbox.text())
             else:
                 setPermission(self.device, self.ui.getCurrentPackage(), checkbox.text())
+
+        def grantAll(permissions):
+            for permission in permissions:
+                setPermission(self.device, self.ui.getCurrentPackage(), permission.get('permission'))
+                self.cleanLayout()
+                self.drawPermissions()
+
+        def revokeAll(permissions):
+            for permission in permissions:
+                revokePermission(self.device, self.ui.getCurrentPackage(), permission.get('permission'))
+                self.cleanLayout()
+                self.drawPermissions()
 
     def cleanLayout(self):
         for i in range(self.boxLayout.count()):
