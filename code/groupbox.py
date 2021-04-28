@@ -1,8 +1,8 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QInputDialog
 
-from styles import getButton, getIconButton
 from spinner import QtWaitingSpinner
+from styles import getButton, getIconButton
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
     resetScreenSize, getPermissions, setPermission, revokePermission
 
@@ -37,7 +37,7 @@ class DeviceBox(Box):
 
         self.installButton = getButton("Установить")
         self.deleteButton = getButton("Удалить")
-        self.additionsButton = getIconButton('./icons/settings.png')
+        self.additionsButton = getIconButton('./icons/settings.png', 'Настройки')
 
         self.installButton.clicked.connect(lambda state, target=device,
                                                   button=self.installButton,
@@ -66,7 +66,7 @@ class DeviceBox(Box):
 
         getPermissions(self.device, self.ui.getCurrentPackage())
 
-        self.additionsTitle = QtWidgets.QLabel("Настройки устройства")
+        self.additionsTitle = QtWidgets.QLabel(getDeviceName(self.device))
         self.additionsTitle.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.boxLayout.addWidget(self.additionsTitle, 0, 0, 1, 1)
 
