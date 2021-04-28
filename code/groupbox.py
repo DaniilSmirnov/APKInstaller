@@ -66,7 +66,7 @@ class DeviceBox(Box):
 
         getPermissions(self.device, self.ui.getCurrentPackage())
 
-        self.additionsTitle = QtWidgets.QLabel("Настройки устройства")
+        self.additionsTitle = QtWidgets.QLabel(getDeviceName(self.device))
         self.additionsTitle.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.boxLayout.addWidget(self.additionsTitle, 0, 0, 1, 1)
 
