@@ -37,7 +37,7 @@ class DeviceBox(Box):
 
         self.installButton = getButton("Установить")
         self.deleteButton = getButton("Удалить")
-        self.additionsButton = getIconButton('./icons/settings.png')
+        self.additionsButton = getIconButton('./icons/settings.png', 'Настройки')
 
         self.installButton.clicked.connect(lambda state, target=device,
                                                   button=self.installButton,

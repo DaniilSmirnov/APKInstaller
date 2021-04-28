@@ -38,7 +38,7 @@ class Window(QtWidgets.QWidget):
         self.allInstallButton = getButton("Установить на все")
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
-        self.openSettingsButton = getIconButton('./icons/settings.png')
+        self.openSettingsButton = getIconButton('./icons/settings.png', 'Настройки')
         self.mainLayout.addWidget(self.openSettingsButton, 0, 3, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)

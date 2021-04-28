@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QColor, QPixmap
+import os
 
 color = '#3F8AE0'
 
@@ -28,10 +29,15 @@ def getButton(text):
     return button
 
 
-def getIconButton(path):
-    button = QtWidgets.QPushButton(icon=getIcon(path))
-    button.setStyleSheet(iconButtonStyleSheet)
-    button.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-    button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+def getIconButton(icon_path, tooltip):
+    if os.path.exists(icon_path):
+        icon = getIcon(icon_path)
+        button = QtWidgets.QPushButton(icon=icon)
+        button.setStyleSheet(iconButtonStyleSheet)
+        button.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        button.setToolTip(tooltip)
+    else:
+        button = getButton(tooltip)
 
     return button
