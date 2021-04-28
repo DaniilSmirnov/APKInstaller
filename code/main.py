@@ -1,14 +1,14 @@
 import sys
+from threading import Timer
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer
-from threading import Timer
 
-from styles import getIconButton, getButton
 from database import get_settings, set_settings, getPackages
-from groupbox import DeviceBox, InfoBox, PlaceholderBox, Box
-from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 from fileedit import FileEdit
+from groupbox import DeviceBox, InfoBox, PlaceholderBox, Box
+from styles import getIconButton, getButton
+from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 
 
 class Window(QtWidgets.QWidget):

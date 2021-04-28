@@ -1,6 +1,7 @@
+import os
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QColor, QPixmap
-import os
 
 color = '#3F8AE0'
 

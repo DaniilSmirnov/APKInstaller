@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore, Qt
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSignal
 
 

@@ -1,8 +1,8 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QInputDialog
 
-from styles import getButton, getIconButton
 from spinner import QtWaitingSpinner
+from styles import getButton, getIconButton
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
     resetScreenSize, getPermissions, setPermission, revokePermission
 
