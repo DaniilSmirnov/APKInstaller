@@ -7,7 +7,7 @@ from PyQt6.QtCore import QTimer
 from database import get_settings, set_settings, getPackages
 from filelabel import FileLabel
 from groupbox import DeviceBox, InfoBox, Box
-from styles import getIconButton, getButton, settings_icon, app_icon
+from styles import getIconButton, getButton, settings_icon, app_icon, getLabel, buttonStyleSheet, getComboBox
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 
 
@@ -26,11 +26,9 @@ class Window(QtWidgets.QWidget):
 
         self.fileDrop = FileLabel(self.centralwidget)
         self.mainLayout.addWidget(self.fileDrop, 0, 0, 1, 1)
-        self.fileDrop.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
 
-        self.packageSelector = QtWidgets.QComboBox()
+        self.packageSelector = getComboBox()
         self.mainLayout.addWidget(self.packageSelector, 0, 1, 1, 1)
-        self.packageSelector.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
         self.fillPackageSelector()
 
         self.allInstallButton = getButton("Установить на все")
@@ -65,7 +63,7 @@ class Window(QtWidgets.QWidget):
                 widget = self.boxes[box]
                 device = self.boxes[box].device
                 widget.deviceVersionCode.setText(getVersionCode(device, self.getCurrentPackage()))
-        except RuntimeError:
+        except Exception:
             pass
 
     def getCurrentPackage(self):
@@ -108,8 +106,8 @@ class Window(QtWidgets.QWidget):
 
         settingsBox = Box(self.scrollWidget)
 
-        packageLabel = QtWidgets.QLabel("Имя пакета приложения")
-        packageInfoLabel = QtWidgets.QLabel("Можно ввести несколько через запятую")
+        packageLabel = getLabel("Имя пакета приложения")
+        packageInfoLabel = getLabel("Можно ввести несколько через запятую")
 
         packageEdit = QtWidgets.QLineEdit(settings.get('package'))
 

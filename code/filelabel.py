@@ -9,7 +9,7 @@ class FileLabel(QtWidgets.QLabel):
         self.setAcceptDrops(True)
         self.setText('Поместите сюда файл через drag n drop или нажмите для выбора')
         self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
-
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
     clicked = pyqtSignal()
 
     def mousePressEvent(self, event):

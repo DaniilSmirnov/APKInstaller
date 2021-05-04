@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtWidgets import QInputDialog
 
-from styles import getButton, getIconButton, settings_icon
+from styles import getButton, getIconButton, settings_icon, getLabel, getCheckBox
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
     resetScreenSize, getPermissions, setPermission, revokePermission
 
@@ -65,8 +65,7 @@ class DeviceBox(Box):
 
         getPermissions(self.device, self.ui.getCurrentPackage())
 
-        self.additionsTitle = QtWidgets.QLabel(getDeviceName(self.device))
-        self.additionsTitle.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
+        self.additionsTitle = getLabel(getDeviceName(self.device))
         self.boxLayout.addWidget(self.additionsTitle, 0, 0, 1, 1)
 
         self.screenSizeButton = getButton("Разрешение экрана")
@@ -83,7 +82,7 @@ class DeviceBox(Box):
 
         self.closeButton = getButton("Закрыть")
         self.closeButton.clicked.connect(self.restoreLayout)
-        self.boxLayout.addWidget(self.closeButton, 4, 0, 1, 1)
+        self.boxLayout.addWidget(self.closeButton, 3, 1, 1, 1)
 
     def openDPI(self):
         text, ok = QInputDialog.getInt(self, 'Установка DPI',
@@ -112,15 +111,14 @@ class DeviceBox(Box):
         permissions = getPermissions(self.device, self.ui.getCurrentPackage())
 
         for permission in permissions:
-            permissionsCheck = QtWidgets.QCheckBox(permission.get('permission'))
+            permissionsCheck = getCheckBox(permission.get('permission'))
             if permission.get('state'):
                 permissionsCheck.toggle()
-            permissionsCheck.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
 
             permissionsCheck.clicked.connect(lambda state, target=permissionsCheck:
                                              togglePermission(target))
 
-            if i % 4 == 0:
+            if i % 3 == 0:
                 j += 1
                 i = 0
             self.boxLayout.addWidget(permissionsCheck, i, j, 1, 1)

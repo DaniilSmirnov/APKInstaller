@@ -47,3 +47,27 @@ def getIconButton(icon_path, tooltip):
         button = getButton(tooltip)
 
     return button
+
+
+def getLabel(text):
+    label = QtWidgets.QLabel(text)
+    label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
+    return label
+
+
+def getComboBox():
+    comboBox = QtWidgets.QComboBox()
+    comboBox.setStyleSheet(buttonStyleSheet)
+    comboBox.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
+    comboBox.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+
+    return comboBox
+
+
+def getCheckBox(text):
+    comboBox = QtWidgets.QCheckBox(text)
+    comboBox.setStyleSheet(buttonStyleSheet)
+    comboBox.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
+    comboBox.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+
+    return comboBox
