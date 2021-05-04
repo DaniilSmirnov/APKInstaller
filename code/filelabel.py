@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets
+from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtCore import pyqtSignal
 
 
@@ -8,6 +8,7 @@ class FileLabel(QtWidgets.QLabel):
 
         self.setAcceptDrops(True)
         self.setText('Поместите сюда файл через drag n drop или нажмите для выбора')
+        self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
 
     clicked = pyqtSignal()
 

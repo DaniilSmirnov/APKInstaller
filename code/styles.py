@@ -5,11 +5,12 @@ from PyQt6.QtGui import QColor, QPixmap
 
 color = '#3F8AE0'
 
-iconButtonStyleSheet = '''
-QPushButton{
-color: transparent;
-background-color: transparent;
-}
+buttonStyleSheet = f'''
+color: {color};
+background-color: rgba(0, 28, 61, 0.05);
+border-radius: 10px; 
+border: 1px solid {color};
+padding: 3px;
 '''
 
 
@@ -26,6 +27,7 @@ def getButton(text):
     button = QtWidgets.QPushButton(text)
     button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
     button.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+    button.setStyleSheet(buttonStyleSheet)
 
     return button
 
@@ -34,7 +36,7 @@ def getIconButton(icon_path, tooltip):
     if os.path.exists(icon_path):
         icon = getIcon(icon_path)
         button = QtWidgets.QPushButton(icon=icon)
-        button.setStyleSheet(iconButtonStyleSheet)
+        button.setStyleSheet(buttonStyleSheet)
         button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
         button.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
         button.setToolTip(tooltip)
