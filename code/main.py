@@ -7,22 +7,19 @@ from PyQt6.QtCore import QTimer
 from database import get_settings, set_settings, getPackages
 from filelabel import FileLabel
 from groupbox import DeviceBox, InfoBox, Box
-from styles import getIconButton, getButton
+from styles import getIconButton, getButton, settings_icon, app_icon
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 
 
 class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
-    is_launch = True
     in_settings = False
 
     def setupUi(self):
-        MainWindow.setObjectName("MainWindow")
         MainWindow.resize(520, 200)
-        MainWindow.setWindowIcon(QtGui.QIcon('./icons/APK_icon.png'))
+        MainWindow.setWindowIcon(QtGui.QIcon(app_icon))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
         self.mainLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.mainLayout.setVerticalSpacing(0)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -39,7 +36,7 @@ class Window(QtWidgets.QWidget):
         self.allInstallButton = getButton("Установить на все")
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
-        self.openSettingsButton = getIconButton('./icons/settings.png', 'Настройки')
+        self.openSettingsButton = getIconButton(settings_icon, 'Настройки')
         self.mainLayout.addWidget(self.openSettingsButton, 0, 3, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
@@ -190,10 +187,6 @@ class Window(QtWidgets.QWidget):
 
 def checkDevicesActuality():
     try:
-        if ui.is_launch:
-            ui.cleanScrollLayout()
-            ui.is_launch = False
-
         if not ui.in_settings:
             connected_devices = getDevices()
             current_devices = ui.current_devices
@@ -210,7 +203,6 @@ def checkDevicesActuality():
                     ui.boxes.pop('no_devices')
                     ui.scrollLayout.removeWidget(widget)
                     widget.deleteLater()
-                    return
 
                 for device in connected_devices:
                     try:
@@ -235,11 +227,13 @@ def checkDevicesActuality():
             return
     except RuntimeError:
         return
+    except KeyboardInterrupt:
+        return
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('./icons/APK_icon.png'))
+    app.setWindowIcon(QtGui.QIcon(app_icon))
     MainWindow = QtWidgets.QMainWindow()
     ui = Window()
     ui.setupUi()

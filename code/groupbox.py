@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtWidgets import QInputDialog
 
-from styles import getButton, getIconButton
+from styles import getButton, getIconButton, settings_icon
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
     resetScreenSize, getPermissions, setPermission, revokePermission
 
@@ -36,7 +36,7 @@ class DeviceBox(Box):
 
         self.installButton = getButton("Установить")
         self.deleteButton = getButton("Удалить")
-        self.additionsButton = getIconButton('./icons/settings.png', 'Настройки')
+        self.additionsButton = getIconButton(settings_icon, 'Настройки')
 
         self.installButton.clicked.connect(lambda state, target=device,
                                                   button=self.installButton,

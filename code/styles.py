@@ -3,6 +3,9 @@ import os
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QColor, QPixmap
 
+app_icon = './icons/APK_icon.png'
+settings_icon = './icons/settings.png'
+
 color = '#3F8AE0'
 
 buttonStyleSheet = f'''
