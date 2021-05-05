@@ -1,14 +1,15 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal
+from PyQt6 import QtWidgets, QtGui, QtCore
+from PyQt6.QtCore import pyqtSignal
 
 
-class FileEdit(QtWidgets.QLineEdit):
+class FileLabel(QtWidgets.QLabel):
     def __init__(self, parent):
-        super(FileEdit, self).__init__(parent)
+        super(FileLabel, self).__init__(parent)
 
-        self.setDragEnabled(True)
-        self.setPlaceholderText('Поместите сюда файл через drag n drop или нажмите для выбора')
-
+        self.setAcceptDrops(True)
+        self.setText('Поместите сюда файл через drag n drop или нажмите для выбора')
+        self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
     clicked = pyqtSignal()
 
     def mousePressEvent(self, event):
@@ -30,4 +31,4 @@ class FileEdit(QtWidgets.QLineEdit):
         data = event.mimeData()
         url = data.urls()[0]
         path = url.toLocalFile()
-        self.setPlaceholderText(str(path))
+        self.setText(str(path))

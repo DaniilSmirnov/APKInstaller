@@ -1,52 +1,48 @@
 import sys
 from threading import Timer
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTimer
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtCore import QTimer
 
 from database import get_settings, set_settings, getPackages
-from fileedit import FileEdit
-from groupbox import DeviceBox, InfoBox, PlaceholderBox, Box
-from styles import getIconButton, getButton
+from filelabel import FileLabel
+from groupbox import DeviceBox, InfoBox, Box
+from styles import getIconButton, getButton, settings_icon, app_icon, getLabel, getComboBox
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 
 
 class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
-    is_launch = True
     in_settings = False
 
     def setupUi(self):
-        MainWindow.setObjectName("MainWindow")
         MainWindow.resize(520, 200)
-        MainWindow.setWindowIcon(QtGui.QIcon('./icons/APK_icon.png'))
+        MainWindow.setWindowIcon(QtGui.QIcon(app_icon))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
         self.mainLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.mainLayout.setVerticalSpacing(0)
         MainWindow.setCentralWidget(self.centralwidget)
 
-        self.fileDrop = FileEdit(self.centralwidget)
+        self.fileDrop = FileLabel(self.centralwidget)
         self.mainLayout.addWidget(self.fileDrop, 0, 0, 1, 1)
 
-        self.packageSelector = QtWidgets.QComboBox()
+        self.packageSelector = getComboBox()
         self.mainLayout.addWidget(self.packageSelector, 0, 1, 1, 1)
-        self.packageSelector.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.fillPackageSelector()
 
         self.allInstallButton = getButton("Установить на все")
         self.mainLayout.addWidget(self.allInstallButton, 0, 2, 1, 1)
 
-        self.openSettingsButton = getIconButton('./icons/settings.png', 'Настройки')
+        self.openSettingsButton = getIconButton(settings_icon, 'Настройки')
         self.mainLayout.addWidget(self.openSettingsButton, 0, 3, 1, 1)
 
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
-        self.scrollArea.setFrameStyle(QtWidgets.QFrame.NoFrame)
+        self.scrollArea.setFrameStyle(QtWidgets.QFrame.Shape.NoFrame.value)
         self.mainLayout.addWidget(self.scrollArea, 1, 0, 1, 5)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.verticalScrollBar().setEnabled(False)
-        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.scrollWidget = QtWidgets.QWidget()
         self.scrollLayout = QtWidgets.QHBoxLayout(self.scrollWidget)
         self.scrollWidget.setLayout(self.scrollLayout)
@@ -55,16 +51,11 @@ class Window(QtWidgets.QWidget):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         self.startAdb()
-        self.drawPlaceHolders()
 
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
         self.packageSelector.currentTextChanged.connect(self.updateBuildCodes)
-
-    def drawPlaceHolders(self):
-        for i in range(0, 5):
-            self.scrollLayout.addWidget(PlaceholderBox(self.scrollWidget))
 
     def updateBuildCodes(self):
         try:
@@ -72,7 +63,7 @@ class Window(QtWidgets.QWidget):
                 widget = self.boxes[box]
                 device = self.boxes[box].device
                 widget.deviceVersionCode.setText(getVersionCode(device, self.getCurrentPackage()))
-        except RuntimeError:
+        except Exception:
             pass
 
     def getCurrentPackage(self):
@@ -81,10 +72,10 @@ class Window(QtWidgets.QWidget):
     def openFileSelect(self):
         text = QtWidgets.QFileDialog.getOpenFileName(self, "Выбор файла", 'C://Users')
         file = text[0]
-        if file.isspace():
-            self.fileDrop.setPlaceholderText('Поместите сюда файл через drag n drop или нажмите для выбора')
+        if file.isspace() or file == "":
+            self.fileDrop.setText('Поместите сюда файл через drag n drop или нажмите для выбора')
         else:
-            self.fileDrop.setPlaceholderText(file)
+            self.fileDrop.setText(file)
 
     def fillPackageSelector(self):
         self.packageSelector.clear()
@@ -115,8 +106,8 @@ class Window(QtWidgets.QWidget):
 
         settingsBox = Box(self.scrollWidget)
 
-        packageLabel = QtWidgets.QLabel("Имя пакета приложения")
-        packageInfoLabel = QtWidgets.QLabel("Можно ввести несколько через запятую")
+        packageLabel = getLabel("Имя пакета приложения")
+        packageInfoLabel = getLabel("Можно ввести несколько через запятую")
 
         packageEdit = QtWidgets.QLineEdit(settings.get('package'))
 
@@ -194,10 +185,6 @@ class Window(QtWidgets.QWidget):
 
 def checkDevicesActuality():
     try:
-        if ui.is_launch:
-            ui.cleanScrollLayout()
-            ui.is_launch = False
-
         if not ui.in_settings:
             connected_devices = getDevices()
             current_devices = ui.current_devices
@@ -214,7 +201,6 @@ def checkDevicesActuality():
                     ui.boxes.pop('no_devices')
                     ui.scrollLayout.removeWidget(widget)
                     widget.deleteLater()
-                    return
 
                 for device in connected_devices:
                     try:
@@ -238,12 +224,14 @@ def checkDevicesActuality():
         else:
             return
     except RuntimeError:
-        adbClient()
+        return
+    except KeyboardInterrupt:
+        return
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('./icons/APK_icon.png'))
+    app.setWindowIcon(QtGui.QIcon(app_icon))
     MainWindow = QtWidgets.QMainWindow()
     ui = Window()
     ui.setupUi()
@@ -253,4 +241,4 @@ if __name__ == "__main__":
     updater.timeout.connect(checkDevicesActuality)
     updater.start(300)
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
