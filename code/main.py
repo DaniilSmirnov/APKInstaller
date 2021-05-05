@@ -7,7 +7,7 @@ from PyQt6.QtCore import QTimer
 from database import get_settings, set_settings, getPackages
 from filelabel import FileLabel
 from groupbox import DeviceBox, InfoBox, Box
-from styles import getIconButton, getButton, settings_icon, app_icon, getLabel, buttonStyleSheet, getComboBox
+from styles import getIconButton, getButton, settings_icon, app_icon, getLabel, getComboBox
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 
 
