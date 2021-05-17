@@ -1,6 +1,6 @@
 import sys
-from threading import Timer
 import traceback
+from threading import Timer
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import QTimer
@@ -191,17 +191,19 @@ def checkDevicesActuality():
             current_devices = ui.current_devices
 
             if len(connected_devices) == 0:
-                ui.cleanScrollLayout()
-                info = InfoBox(ui.scrollWidget, 'Устройства не обнаружены')
-                ui.scrollLayout.addWidget(info)
-                ui.boxes.update({'no_devices': info})
+                ui.setBoxesVisibility(False)
+                info = ui.boxes.get('no_devices')
+                if info is None:
+                    info = InfoBox(ui.scrollWidget, 'Устройства не обнаружены')
+                    ui.boxes.update({'no_devices': info})
+                    ui.scrollLayout.addWidget(info)
+                else:
+                    info.setVisible(True)
 
             if len(connected_devices) > 0:
                 widget = ui.boxes.get('no_devices')
                 if widget is not None:
-                    ui.boxes.pop('no_devices')
-                    ui.scrollLayout.removeWidget(widget)
-                    widget.deleteLater()
+                    widget.setVisible(False)
 
                 for device in connected_devices:
                     try:
@@ -228,6 +230,16 @@ def checkDevicesActuality():
         print(traceback.format_exc())
 
 
+def backgroundBoxCleaner():
+    try:
+        for box in ui.boxes:
+            if box != 'no_devices' and not ui.boxes[box].isVisible():
+                ui.boxes[box].deleteLater()
+                ui.boxes.pop(box)
+    except RuntimeError:
+        return
+
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon(app_icon))
@@ -239,5 +251,9 @@ if __name__ == "__main__":
     updater = QTimer()
     updater.timeout.connect(checkDevicesActuality)
     updater.start(300)
+
+    cleaner = QTimer()
+    cleaner.timeout.connect(backgroundBoxCleaner)
+    cleaner.start(500)
 
     sys.exit(app.exec())
