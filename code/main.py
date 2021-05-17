@@ -1,5 +1,6 @@
 import sys
 from threading import Timer
+import traceback
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import QTimer
@@ -209,7 +210,7 @@ def checkDevicesActuality():
                             ui.scrollLayout.addWidget(new_device)
                             ui.boxes.update({device.get_serial_no(): new_device})
                     except RuntimeError:
-                        continue
+                        print(traceback.format_exc())
 
                 connected_devices = getSerialsArray(getDevices())
 
@@ -223,10 +224,8 @@ def checkDevicesActuality():
             ui.current_devices = connected_devices
         else:
             return
-    except RuntimeError:
-        return
-    except KeyboardInterrupt:
-        return
+    except Exception:
+        print(traceback.format_exc())
 
 
 if __name__ == "__main__":

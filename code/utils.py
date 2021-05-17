@@ -1,16 +1,26 @@
-import re
 import os
+import re
+
 from ppadb.client import Client as AdbClient
+
+client = AdbClient(host="127.0.0.1", port=5037)
+
+
+def resendAdb():
+    print('resend')
+    os.system("adb devices")
+    client = AdbClient(host="127.0.0.1", port=5037)
+    return client
 
 
 def adbClient():
+    global client
     try:
-        client = AdbClient(host="127.0.0.1", port=5037)
+        return client
     except Exception:
         os.system("adb devices")
-        client = AdbClient(host="127.0.0.1", port=5037)
-
-    return client
+        resendAdb()
+        return client
 
 
 def getDevices():
