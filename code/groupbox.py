@@ -105,28 +105,10 @@ class DeviceBox(Box):
         self.cleanLayout()
         self.checkboxes = []
 
-        i = 0
-        j = 0
-
         permissions = getPermissions(self.device, self.ui.getCurrentPackage())
 
-        for permission in permissions:
-            permissionsCheck = getCheckBox(permission.get('permission'))
-            if permission.get('state'):
-                permissionsCheck.toggle()
-
-            permissionsCheck.clicked.connect(lambda state, target=permissionsCheck:
-                                             togglePermission(target))
-
-            if i % 3 == 0:
-                j += 1
-                i = 0
-            self.boxLayout.addWidget(permissionsCheck, i, j, 1, 1)
-            self.checkboxes.append(permissionsCheck)
-            i += 1
-
+        j = 0
         i = 0
-        j += 1
         self.closeButton = getButton("Закрыть")
         self.closeButton.clicked.connect(self.restoreLayout)
         self.boxLayout.addWidget(self.closeButton, i, j, 1, 1)
@@ -146,6 +128,23 @@ class DeviceBox(Box):
         self.boxLayout.addWidget(self.revokeAllButton, i, j, 1, 1)
         self.checkboxes.append(self.revokeAllButton)
         i += 1
+
+        j += 1
+
+        for permission in permissions:
+            permissionsCheck = getCheckBox(permission.get('permission'))
+            if permission.get('state'):
+                permissionsCheck.toggle()
+
+            permissionsCheck.clicked.connect(lambda state, target=permissionsCheck:
+                                             togglePermission(target))
+
+            if i % 3 == 0:
+                j += 1
+                i = 0
+            self.boxLayout.addWidget(permissionsCheck, i, j, 1, 1)
+            self.checkboxes.append(permissionsCheck)
+            i += 1
 
         def togglePermission(checkbox):
             if not checkbox.isChecked():
