@@ -159,7 +159,7 @@ class Window(QtWidgets.QWidget):
             self.scrollLayout.addWidget(InfoBox(self.scrollWidget, 'ADB не может быть запущен'))
 
     def getPath(self):
-        return self.fileDrop.placeholderText()
+        return self.fileDrop.text()
 
     def install(self, device, button, delete_button, code):
         def deploy(device):
@@ -170,6 +170,7 @@ class Window(QtWidgets.QWidget):
                 code.setText(getVersionCode(device, self.getCurrentPackage()))
             except Exception:
                 button.setText('Повторить')
+                print(traceback.format_exc())
 
         button.setText('Установка')
 
@@ -182,6 +183,7 @@ class Window(QtWidgets.QWidget):
             code.setText(getVersionCode(device, self.getCurrentPackage()))
         except Exception:
             button.setText('Повторить')
+            print(traceback.format_exc())
 
 
 def checkDevicesActuality():
