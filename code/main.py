@@ -129,6 +129,7 @@ class Window(QtWidgets.QWidget):
             applySettingsButton.deleteLater()
             closeSettingsButton.deleteLater()
             settingsBox.deleteLater()
+            self.in_settings = False
 
             self.allInstallButton.setVisible(True)
             self.openSettingsButton.setVisible(True)

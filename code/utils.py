@@ -7,6 +7,7 @@ client = AdbClient(host="127.0.0.1", port=5037)
 
 
 def resendAdb():
+    global client
     print('resend')
     os.system("adb devices")
     client = AdbClient(host="127.0.0.1", port=5037)
@@ -16,6 +17,7 @@ def resendAdb():
 def adbClient():
     global client
     try:
+        client.version()
         return client
     except Exception:
         os.system("adb devices")
