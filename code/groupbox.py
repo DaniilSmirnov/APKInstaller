@@ -30,9 +30,9 @@ class DeviceBox(Box):
         self.deviceVersion = QtWidgets.QLabel(getAndroidVersion(self.device))
         self.deviceVersionCode = QtWidgets.QLabel(getVersionCode(self.device, ui.getCurrentPackage()))
 
-        self.deviceVersion.setTextInteractionFlags(QtCore.Qt.TextInteractionFlags.TextSelectableByMouse)
-        self.deviceName.setTextInteractionFlags(QtCore.Qt.TextInteractionFlags.TextSelectableByMouse)
-        self.deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextInteractionFlags.TextSelectableByMouse)
+        self.deviceVersion.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.deviceName.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
 
         self.installButton = getButton("Установить")
         self.deleteButton = getButton("Удалить")
