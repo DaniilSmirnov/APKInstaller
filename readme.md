@@ -1,6 +1,6 @@
-![image](https://user-images.githubusercontent.com/8039921/115975001-c7f7ff80-a569-11eb-8ad6-f98eba5c9c55.png)
-![image](https://user-images.githubusercontent.com/8039921/115975008-db0acf80-a569-11eb-8893-7323e096f32a.png)
-![image](https://user-images.githubusercontent.com/8039921/115989498-577fcb80-a5c7-11eb-9b77-02d73a4766ce.png)
+![image](https://user-images.githubusercontent.com/8039921/118798292-29c83280-b8a6-11eb-9bcf-a41d2ba19b8d.png)
+![image](https://user-images.githubusercontent.com/8039921/118798351-36e52180-b8a6-11eb-8778-acf58090db0a.png)
+![image](https://user-images.githubusercontent.com/8039921/118798381-3ea4c600-b8a6-11eb-9282-7cd756ab69a5.png)
 
 
 **Установка**. После успешной установки произойдет запуск
