@@ -1,4 +1,5 @@
 import sys
+import traceback
 from threading import Timer
 
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -158,7 +159,7 @@ class Window(QtWidgets.QWidget):
             self.scrollLayout.addWidget(InfoBox(self.scrollWidget, 'ADB не может быть запущен'))
 
     def getPath(self):
-        return self.fileDrop.placeholderText()
+        return self.fileDrop.text()
 
     def install(self, device, button, delete_button, code):
         def deploy(device):
@@ -169,6 +170,7 @@ class Window(QtWidgets.QWidget):
                 code.setText(getVersionCode(device, self.getCurrentPackage()))
             except Exception:
                 button.setText('Повторить')
+                print(traceback.format_exc())
 
         button.setText('Установка')
 
@@ -181,6 +183,7 @@ class Window(QtWidgets.QWidget):
             code.setText(getVersionCode(device, self.getCurrentPackage()))
         except Exception:
             button.setText('Повторить')
+            print(traceback.format_exc())
 
 
 def checkDevicesActuality():
@@ -190,17 +193,19 @@ def checkDevicesActuality():
             current_devices = ui.current_devices
 
             if len(connected_devices) == 0:
-                ui.cleanScrollLayout()
-                info = InfoBox(ui.scrollWidget, 'Устройства не обнаружены')
-                ui.scrollLayout.addWidget(info)
-                ui.boxes.update({'no_devices': info})
+                ui.setBoxesVisibility(False)
+                info = ui.boxes.get('no_devices')
+                if info is None:
+                    info = InfoBox(ui.scrollWidget, 'Устройства не обнаружены')
+                    ui.boxes.update({'no_devices': info})
+                    ui.scrollLayout.addWidget(info)
+                else:
+                    info.setVisible(True)
 
             if len(connected_devices) > 0:
                 widget = ui.boxes.get('no_devices')
                 if widget is not None:
-                    ui.boxes.pop('no_devices')
-                    ui.scrollLayout.removeWidget(widget)
-                    widget.deleteLater()
+                    widget.setVisible(False)
 
                 for device in connected_devices:
                     try:
@@ -209,7 +214,7 @@ def checkDevicesActuality():
                             ui.scrollLayout.addWidget(new_device)
                             ui.boxes.update({device.get_serial_no(): new_device})
                     except RuntimeError:
-                        continue
+                        print(traceback.format_exc())
 
                 connected_devices = getSerialsArray(getDevices())
 
@@ -223,9 +228,17 @@ def checkDevicesActuality():
             ui.current_devices = connected_devices
         else:
             return
+    except Exception:
+        print(traceback.format_exc())
+
+
+def backgroundBoxCleaner():
+    try:
+        for box in ui.boxes:
+            if box != 'no_devices' and not ui.boxes[box].isVisible():
+                ui.boxes[box].deleteLater()
+                ui.boxes.pop(box)
     except RuntimeError:
-        return
-    except KeyboardInterrupt:
         return
 
 
@@ -240,5 +253,9 @@ if __name__ == "__main__":
     updater = QTimer()
     updater.timeout.connect(checkDevicesActuality)
     updater.start(300)
+
+    cleaner = QTimer()
+    cleaner.timeout.connect(backgroundBoxCleaner)
+    cleaner.start(500)
 
     sys.exit(app.exec())
