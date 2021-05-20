@@ -2,6 +2,7 @@ import sys
 import traceback
 from threading import Timer
 
+import sentry_sdk
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import QTimer
 
@@ -10,6 +11,11 @@ from filelabel import FileLabel
 from groupbox import DeviceBox, InfoBox, Box
 from styles import getIconButton, getButton, settings_icon, app_icon, getLabel, getComboBox
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
+
+sentry_sdk.init(
+    "https://0cbf9befcec248f3adca4c61df10dccf@o694682.ingest.sentry.io/5775215",
+    traces_sample_rate=1.0
+)
 
 
 class Window(QtWidgets.QWidget):
@@ -171,7 +177,8 @@ class Window(QtWidgets.QWidget):
                 code.setText(getVersionCode(device, self.getCurrentPackage()))
             except Exception:
                 button.setText('Повторить')
-                print(traceback.format_exc())
+                trace = traceback.format_exc()
+                sentry_sdk.capture_exception(trace)
 
         button.setText('Установка')
 
@@ -184,7 +191,8 @@ class Window(QtWidgets.QWidget):
             code.setText(getVersionCode(device, self.getCurrentPackage()))
         except Exception:
             button.setText('Повторить')
-            print(traceback.format_exc())
+            trace = traceback.format_exc()
+            sentry_sdk.capture_exception(trace)
 
 
 def checkDevicesActuality():
@@ -215,7 +223,8 @@ def checkDevicesActuality():
                             ui.scrollLayout.addWidget(new_device)
                             ui.boxes.update({device.get_serial_no(): new_device})
                     except RuntimeError:
-                        print(traceback.format_exc())
+                        trace = traceback.format_exc()
+                        sentry_sdk.capture_exception(trace)
 
                 connected_devices = getSerialsArray(getDevices())
 
@@ -230,7 +239,8 @@ def checkDevicesActuality():
         else:
             return
     except Exception:
-        print(traceback.format_exc())
+        trace = traceback.format_exc()
+        sentry_sdk.capture_exception(trace)
 
 
 def backgroundBoxCleaner():
