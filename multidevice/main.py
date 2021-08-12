@@ -6,9 +6,10 @@ import sentry_sdk
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import QTimer
 
-from database import get_settings, set_settings, getPackages
+from database import get_settings, set_settings, getPackages, isOneDevice
 from filelabel import FileLabel
 from groupbox import DeviceBox, InfoBox, Box
+from onedevice.onedevice import OneDeviceWidget
 from styles import getIconButton, getButton, settings_icon, app_icon, getLabel, getComboBox
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 
@@ -22,6 +23,7 @@ class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
     in_settings = False
+    onedevice = False
 
     def setupUi(self):
         MainWindow.resize(520, 200)
@@ -59,10 +61,19 @@ class Window(QtWidgets.QWidget):
 
         self.startAdb()
 
+        if isOneDevice():
+            self.onedevice = True
+            self.drawOneDevice()
+
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
         self.packageSelector.currentTextChanged.connect(self.updateBuildCodes)
+
+    def drawOneDevice(self):
+        devices = getDevices()
+        self.OneDevice = OneDeviceWidget(ui.centralwidget, devices[0], ui)
+        self.mainLayout.addWidget(self.OneDevice, 2, 0, 5, 5)
 
     def updateBuildCodes(self):
         try:
@@ -103,7 +114,7 @@ class Window(QtWidgets.QWidget):
 
         applySettingsButton = getButton("Применить")
         self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
-        applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
+        applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit, oneDeviceCheckBox))
 
         closeSettingsButton = getButton("Назад")
         self.mainLayout.addWidget(closeSettingsButton, 0, 3, 1, 1)
@@ -122,12 +133,22 @@ class Window(QtWidgets.QWidget):
         settingsBox.boxLayout.addWidget(packageInfoLabel)
         settingsBox.boxLayout.addWidget(packageEdit)
 
+        oneDeviceCheckBox = QtWidgets.QCheckBox('Режим одного устройства')
+        if isOneDevice():
+            self.OneDevice.setVisible(False)
+            #self.OneDevice.deleteLater()
+            oneDeviceCheckBox.setChecked(True)
+        else:
+            oneDeviceCheckBox.setChecked(False)
+        settingsBox.boxLayout.addWidget(oneDeviceCheckBox)
+
         self.scrollLayout.addWidget(settingsBox)
 
-        def saveSettings(url):
+        def saveSettings(url, checkbox):
             text = url.text().strip()
+            is_checked = checkbox.isChecked()
             if not text.isspace():
-                Timer(0, set_settings, args=[text]).start()
+                Timer(0, set_settings, args=[text, is_checked]).start()
 
             closeSettings()
 
@@ -197,7 +218,7 @@ class Window(QtWidgets.QWidget):
 
 def checkDevicesActuality():
     try:
-        if not ui.in_settings:
+        if not ui.in_settings and not ui.onedevice:
             connected_devices = getDevices()
             current_devices = ui.current_devices
 
@@ -237,6 +258,11 @@ def checkDevicesActuality():
                         widget.deleteLater()
 
             ui.current_devices = connected_devices
+        #elif ui.onedevice:
+        #    connected_devices = getDevices()
+        #    if len(connected_devices) == 1:
+        #        ui.scrollWidget.setVisible(False)
+        #        ui.mainLayout.addWidget(OneDeviceWidget(ui.centralwidget, connected_devices[0], ui), 2, 0, 5, 5)
         else:
             return
     except Exception:

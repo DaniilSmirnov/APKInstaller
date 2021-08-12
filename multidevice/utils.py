@@ -8,7 +8,6 @@ client = AdbClient(host="127.0.0.1", port=5037)
 
 def resendAdb():
     global client
-    print('resend')
     os.system("adb devices")
     client = AdbClient(host="127.0.0.1", port=5037)
     return client
@@ -106,7 +105,8 @@ def resetDPI(device):
 def getScreenSize(device):
     cmd = 'wm size'
     raw = device.shell(cmd).strip()
-    return re.findall('([0-9]+)x([0-9]+)', raw)[0]
+    raw = re.findall('([0-9]+)x([0-9]+)', raw)[0]
+    return raw[0] + 'x' + raw[1]
 
 
 def setScreenSize(device, size):

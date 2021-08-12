@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QInputDialog
 
 from styles import getButton, getIconButton, settings_icon, getLabel, getCheckBox
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
-    resetScreenSize, getPermissions, setPermission, revokePermission
+    resetScreenSize, getPermissions, setPermission, revokePermission, getScreenSize
 
 
 class Box(QtWidgets.QGroupBox):
@@ -17,6 +17,14 @@ class Box(QtWidgets.QGroupBox):
 class InfoBox(Box):
     def __init__(self, parent, text):
         super(InfoBox, self).__init__(parent)
+        self.boxLayout.addWidget(QtWidgets.QLabel(text))
+
+
+class RichInfoBox(Box):
+    def __init__(self, parent, title, text):
+        super(RichInfoBox, self).__init__(parent)
+        self.setTitle(title)
+        self.text = text
         self.boxLayout.addWidget(QtWidgets.QLabel(text))
 
 
@@ -95,7 +103,8 @@ class DeviceBox(Box):
 
     def screenSize(self):
         text, ok = QInputDialog.getText(self, 'Установка разрешения экрана',
-                                        'Введите новое разрешение экрана:')
+                                        "Текущее разрешение - " + getScreenSize(
+                                            self.device) + "\nВведите новое разрешение экрана в формате 'Число'x'Число'")
         if ok:
             setScreenSize(self.device, text)
         else:
