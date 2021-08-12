@@ -178,7 +178,7 @@ class Window(QtWidgets.QWidget):
             except Exception:
                 button.setText('Повторить')
                 trace = traceback.format_exc()
-                sentry_sdk.capture_exception(trace)
+                sentry_sdk.capture_message(trace)
 
         button.setText('Установка')
 
@@ -192,7 +192,7 @@ class Window(QtWidgets.QWidget):
         except Exception:
             button.setText('Повторить')
             trace = traceback.format_exc()
-            sentry_sdk.capture_exception(trace)
+            sentry_sdk.capture_message(trace)
 
 
 def checkDevicesActuality():
@@ -210,6 +210,7 @@ def checkDevicesActuality():
                     ui.scrollLayout.addWidget(info)
                 else:
                     info.setVisible(True)
+                backgroundBoxCleaner()
 
             if len(connected_devices) > 0:
                 widget = ui.boxes.get('no_devices')
@@ -224,7 +225,7 @@ def checkDevicesActuality():
                             ui.boxes.update({device.get_serial_no(): new_device})
                     except RuntimeError:
                         trace = traceback.format_exc()
-                        sentry_sdk.capture_exception(trace)
+                        sentry_sdk.capture_message(trace)
 
                 connected_devices = getSerialsArray(getDevices())
 
@@ -240,7 +241,7 @@ def checkDevicesActuality():
             return
     except Exception:
         trace = traceback.format_exc()
-        sentry_sdk.capture_exception(trace)
+        sentry_sdk.capture_message(trace)
 
 
 def backgroundBoxCleaner():
