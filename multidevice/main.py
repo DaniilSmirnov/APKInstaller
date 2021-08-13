@@ -258,11 +258,6 @@ def checkDevicesActuality():
                         widget.deleteLater()
 
             ui.current_devices = connected_devices
-        #elif ui.onedevice:
-        #    connected_devices = getDevices()
-        #    if len(connected_devices) == 1:
-        #        ui.scrollWidget.setVisible(False)
-        #        ui.mainLayout.addWidget(OneDeviceWidget(ui.centralwidget, connected_devices[0], ui), 2, 0, 5, 5)
         else:
             return
     except Exception:
@@ -273,7 +268,7 @@ def checkDevicesActuality():
 def backgroundBoxCleaner():
     try:
         for box in ui.boxes:
-            if box != 'no_devices' and not ui.boxes[box].isVisible():
+            if box != 'no_devices' and not ui.boxes[box].isVisible() and not ui.in_settings:
                 ui.boxes[box].deleteLater()
                 ui.boxes.pop(box)
     except RuntimeError:

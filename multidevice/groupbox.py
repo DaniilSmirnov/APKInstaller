@@ -24,8 +24,14 @@ class RichInfoBox(Box):
     def __init__(self, parent, title, text):
         super(RichInfoBox, self).__init__(parent)
         self.setTitle(title)
-        self.text = text
-        self.boxLayout.addWidget(QtWidgets.QLabel(text))
+        self.textLabel = QtWidgets.QLabel(text)
+        self.boxLayout.addWidget(self.textLabel)
+
+    def setText(self, text):
+        self.textLabel.setText(text)
+
+    def text(self):
+        return self.textLabel.text()
 
 
 class DeviceBox(Box):

@@ -1,8 +1,8 @@
 import sentry_sdk
 from PyQt6 import QtWidgets
 
-from multidevice.groupbox import RichInfoBox
-from multidevice.styles import getButton, getIconButton, settings_icon, getCheckBox
+from multidevice.groupbox import RichInfoBox, Box
+from multidevice.styles import getButton, getIconButton, settings_icon, getCheckBox, getLabel
 from multidevice.utils import getDeviceName, getAndroidVersion, getVersionCode, getDPI, getScreenSize, revokePermission, \
     setPermission, getPermissions
 
@@ -16,7 +16,9 @@ class OneDeviceWidget(QtWidgets.QGroupBox):
     def __init__(self, parent, device, ui):
         super(OneDeviceWidget, self).__init__(parent)
         self.boxLayout = QtWidgets.QGridLayout()
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Maximum)
         self.setLayout(self.boxLayout)
+        self.boxLayout.setVerticalSpacing(5)
 
         self.device = device
         self.ui = ui
@@ -25,17 +27,36 @@ class OneDeviceWidget(QtWidgets.QGroupBox):
         self.deviceVersion = RichInfoBox(self, 'ОС', getAndroidVersion(self.device))
         self.deviceVersionCode = RichInfoBox(self, 'Номер сборки',
                                              getVersionCode(self.device, self.ui.getCurrentPackage()))
-        self.deviceDPI = RichInfoBox(self, 'DPI', str(getDPI(self.device)))
-        self.deviceScreen = RichInfoBox(self, 'Размер экрана', getScreenSize(self.device))
 
-        # self.deviceVersion.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        # self.deviceName.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        # self.deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        dpiBox = Box(self)
+        dpiBox.setTitle('DPI устройства')
+        dpiLabel = getLabel('Текущий ' + str(getDPI(self.device)))
+
+        dpiEdit = QtWidgets.QLineEdit()
+        dpiApplyButton = getButton('Применить')
+        dpiResetButton = getButton('Сбросить')
+
+        dpiBox.boxLayout.addWidget(dpiLabel)
+        dpiBox.boxLayout.addWidget(dpiEdit)
+        dpiBox.boxLayout.addWidget(dpiApplyButton)
+        dpiBox.boxLayout.addWidget(dpiResetButton)
+
+        deviceScreenBox = Box(self)
+        deviceScreenBox.setTitle('Размер экрана')
+        deviceScreenLabel = getLabel('Текущий ' + str(getScreenSize(self.device)))
+
+        deviceScreenEdit = QtWidgets.QLineEdit()
+        deviceScreenApplyButton = getButton('Применить')
+        deviceScreenResetButton = getButton('Сбросить')
+
+        deviceScreenBox.boxLayout.addWidget(deviceScreenLabel)
+        deviceScreenBox.boxLayout.addWidget(deviceScreenEdit)
+        deviceScreenBox.boxLayout.addWidget(deviceScreenApplyButton)
+        deviceScreenBox.boxLayout.addWidget(deviceScreenResetButton)
 
         self.installButton = getButton("Установить")
         self.deleteButton = getButton("Удалить")
 
-        '''
         self.installButton.clicked.connect(lambda state, target=device,
                                                   button=self.installButton,
                                                   delete_button=self.deleteButton,
@@ -46,22 +67,20 @@ class OneDeviceWidget(QtWidgets.QGroupBox):
                                                  code=self.deviceVersionCode:
                                           ui.uninstall(target, button, code))
 
-        '''
-
-        if self.deviceVersionCode.text.find('Не установлено') != -1:
+        if self.deviceVersionCode.text().find('Не установлено') != -1:
             self.deleteButton.setEnabled(False)
 
-        self.boxLayout.addWidget(self.deviceName, 0, 0, 1, 1)  # row, col. 2 нужна из-за двух кнопок в нижнем ряду
+        self.boxLayout.addWidget(self.deviceName, 0, 0, 1, 1)
         self.boxLayout.addWidget(self.deviceVersion, 0, 1, 1, 1)
         self.boxLayout.addWidget(self.deviceVersionCode, 0, 2, 1, 1)
+        self.boxLayout.addWidget(PermissionsBox(self, device, self.ui), 0, 3, 5, 5)
 
-        self.boxLayout.addWidget(self.deviceDPI, 1, 0, 1, 1)
-        self.boxLayout.addWidget(self.deviceScreen, 1, 1, 1, 1)
+        self.boxLayout.addWidget(dpiBox, 1, 0, 1, 1)
+
+        self.boxLayout.addWidget(deviceScreenBox, 1, 1, 1, 1)
 
         self.boxLayout.addWidget(self.installButton, 2, 0, 1, 1)
         self.boxLayout.addWidget(self.deleteButton, 2, 1, 1, 1)
-
-        self.boxLayout.addWidget(PermissionsBox(self, device, self.ui), 0, 3, 1, 5)
 
 
 class PermissionsBox(QtWidgets.QGroupBox):
