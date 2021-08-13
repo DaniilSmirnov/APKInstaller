@@ -9,7 +9,7 @@ from PyQt6.QtCore import QTimer
 from database import get_settings, set_settings, getPackages, isOneDevice
 from filelabel import FileLabel
 from groupbox import DeviceBox, InfoBox, Box
-from onedevice.onedevice import OneDeviceWidget
+#from onedevice.onedevice import OneDeviceWidget
 from styles import getIconButton, getButton, settings_icon, app_icon, getLabel, getComboBox
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
 
@@ -72,8 +72,8 @@ class Window(QtWidgets.QWidget):
 
     def drawOneDevice(self):
         devices = getDevices()
-        self.OneDevice = OneDeviceWidget(ui.centralwidget, devices[0], ui)
-        self.mainLayout.addWidget(self.OneDevice, 2, 0, 5, 5)
+        #self.OneDevice = OneDeviceWidget(ui.centralwidget, devices[0], ui)
+        #self.mainLayout.addWidget(self.OneDevice, 2, 0, 5, 5)
 
     def updateBuildCodes(self):
         try:
