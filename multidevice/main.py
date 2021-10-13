@@ -183,8 +183,8 @@ class Window(QtWidgets.QWidget):
     def startAdb(self):
         try:
             adbClient()
-        except Exception:
-            self.scrollLayout.addWidget(InfoBox(self.scrollWidget, 'ADB не может быть запущен'))
+        except Exception as e:
+            self.scrollLayout.addWidget(InfoBox(self.scrollWidget, f'Возникла ошибка при запуске ADB\n{e}'))
 
     def getPath(self):
         return self.fileDrop.text()
