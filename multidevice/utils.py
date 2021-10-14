@@ -1,4 +1,4 @@
-import os
+from subprocess import PIPE, run
 import re
 
 from ppadb.client import Client as AdbClient
@@ -6,10 +6,15 @@ from ppadb.client import Client as AdbClient
 client = AdbClient(host="127.0.0.1", port=5037)
 
 
+def runAdb():
+    adb_start = run("adb devices", stdout=PIPE, stderr=PIPE, shell=True)
+    return True if adb_start.returncode == 0 else False
+
+
 def resendAdb():
     global client
-    os.system("adb devices")
-    client = AdbClient(host="127.0.0.1", port=5037)
+    if runAdb():
+        client = AdbClient(host="127.0.0.1", port=5037)
     return client
 
 
@@ -18,9 +23,11 @@ def adbClient():
     try:
         client.version()
         return client
-    except Exception:
-        os.system("adb devices")
-        resendAdb()
+    except Exception as e:
+        if runAdb():
+            resendAdb()
+        else:
+            raise Exception(f"Не удалось запустить ADB командой adb devices\n{e}")
         return client
 
 
