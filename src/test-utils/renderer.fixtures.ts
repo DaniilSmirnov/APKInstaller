@@ -45,8 +45,6 @@ export const createElectronMock = () => ({
   app: { getVersion: jest.fn().mockResolvedValue('1.0.0') },
   devices: {
     list: jest.fn().mockResolvedValue([]),
-    startTracking: jest.fn().mockResolvedValue(undefined),
-    stopTracking: jest.fn().mockResolvedValue(undefined),
     install: jest.fn().mockResolvedValue(undefined),
     uninstall: jest.fn().mockResolvedValue(undefined),
     getPackageInfo: jest.fn().mockResolvedValue(null),

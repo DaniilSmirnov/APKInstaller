@@ -55,7 +55,6 @@ export class AdbServiceError extends Error {
       code: this.code,
       message: this.message,
       operation: this.operation,
-      ...(this.causeMessage ? { cause: this.causeMessage } : {}),
     };
   }
 }

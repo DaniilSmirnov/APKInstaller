@@ -13,7 +13,6 @@ export const useDevices = (): { devices: DeviceInfo[]; loading: boolean; error: 
       try { const snapshot = await window.electron.devices.list(); if (active) { setDevices(snapshot); setError(null); } }
       catch (cause) { if (active) setError(typeof cause === 'object' && cause !== null && 'message' in cause ? cause as DevicesError : { message: 'ADB unavailable' }); }
       finally { if (active) setLoading(false); }
-      try { await window.electron.devices.startTracking(); } catch (cause) { if (active && !error) setError(typeof cause === 'object' && cause !== null && 'message' in cause ? cause as DevicesError : { message: 'ADB unavailable' }); }
     };
     void load();
     const unsubscribe = window.electron.devices.onChange((change: DeviceChange) => {
@@ -24,7 +23,7 @@ export const useDevices = (): { devices: DeviceInfo[]; loading: boolean; error: 
         return index < 0 ? [...current, change.device] : current.map((device, position) => position === index ? change.device : device);
       });
     });
-    return () => { active = false; unsubscribe(); void window.electron.devices.stopTracking(); };
+    return () => { active = false; unsubscribe(); };
   }, []);
   return { devices, loading, error };
 };

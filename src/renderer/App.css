@@ -29,6 +29,10 @@ h1 { margin: 0; font-size: clamp(28px, 4vw, 38px); }
 .global-message--info, .operation-message--info { background: #eaf1ff; color: #2855a6; }
 .device-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .device-card, .empty-state { padding: 20px; border: 1px solid #dfe5ea; border-radius: 16px; background: #fff; box-shadow: 0 10px 28px rgba(22, 32, 42, .06); }
+.device-card:has(input:checked) { border-color: #2855a6; box-shadow: 0 0 0 2px #dbe7ff; }
+.settings-panel, .device-tools { display: grid; gap: 8px; padding: 12px; border: 1px solid #dfe5ea; border-radius: 12px; background: #fff; }
+.settings-panel input, .device-tools input { min-width: 0; padding: 8px; border: 1px solid #dfe5ea; border-radius: 8px; }
+.tool-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .device-card--offline, .device-card--unauthorized { border-color: #e2c98c; }
 .device-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .device-card h3 { margin: 0 0 5px; font-size: 18px; }

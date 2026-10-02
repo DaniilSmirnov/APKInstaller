@@ -1,6 +1,8 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import { registerAdbIpc, startAdbTracking, stopAdbTracking } from './adb/ipc';
+import { registerAndroidIpc } from './android/ipc';
+import { createSettingsStore } from './settings';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -13,6 +15,24 @@ ipcMain.handle('dialog:open-apk', async (event) => {
   return result.canceled ? null : result.filePaths[0] ?? null;
 });
 registerAdbIpc();
+registerAndroidIpc();
+
+let settingsStore: ReturnType<typeof createSettingsStore>;
+const getSettings = (): ReturnType<typeof createSettingsStore> => {
+  if (!settingsStore) settingsStore = createSettingsStore(app.getPath('userData'));
+  return settingsStore;
+};
+ipcMain.handle('settings:get', () => { const store = getSettings(); return ({ schemaVersion: 1, packages: store.get('packages'), selectedPackage: store.get('selectedPackage'), lastSelectedSerial: store.get('lastSelectedSerial') }); });
+ipcMain.handle('settings:set', (_event, value: unknown) => {
+  if (!value || typeof value !== 'object') throw new Error('Invalid settings');
+  const input = value as { packages?: unknown; selectedPackage?: unknown; lastSelectedSerial?: unknown };
+  if (!Array.isArray(input.packages) || input.packages.some((item) => typeof item !== 'string')) throw new Error('Invalid settings packages');
+  const store = getSettings();
+  store.set('packages', input.packages);
+  if (typeof input.selectedPackage === 'string') store.set('selectedPackage', input.selectedPackage);
+  if (typeof input.lastSelectedSerial === 'string') store.set('lastSelectedSerial', input.lastSelectedSerial);
+  return { schemaVersion: 1, packages: store.get('packages'), selectedPackage: store.get('selectedPackage'), lastSelectedSerial: store.get('lastSelectedSerial') };
+});
 
 const createWindow = (): void => {
   mainWindow = new BrowserWindow({

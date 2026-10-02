@@ -15,6 +15,7 @@ module.exports = {
   // large and unreliable. Electron Builder packages production dependencies.
   externals: {
     '@devicefarmer/adbkit': 'commonjs2 @devicefarmer/adbkit',
+    'electron-store': 'commonjs2 electron-store',
   },
   module: {
     rules: [

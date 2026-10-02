@@ -6,7 +6,7 @@ export const adbService = new AdbService();
 
 const serializeError = (error: unknown): never => {
   if (error instanceof AdbServiceError) throw error.toJSON();
-  throw new AdbServiceError({ code: 'OPERATION_FAILED', message: 'ADB operation failed', operation: 'ipc', cause: String(error) }).toJSON();
+  throw new AdbServiceError({ code: 'OPERATION_FAILED', message: 'ADB operation failed', operation: 'ipc' }).toJSON();
 };
 
 export const registerAdbIpc = (): void => {
@@ -16,8 +16,8 @@ export const registerAdbIpc = (): void => {
   ipcMain.handle('adb:list-devices', async () => {
     try { return await adbService.listDevices(); } catch (error) { return serializeError(error); }
   });
-  ipcMain.handle('adb:install', async (_event, serial: unknown, apkPath: unknown) => {
-    try { await adbService.install(String(serial ?? ''), String(apkPath ?? '')); return { success: true }; } catch (error) { return serializeError(error); }
+  ipcMain.handle('adb:install', async (_event, serial: unknown, apkPath: unknown, packageName: unknown) => {
+    try { await adbService.install(String(serial ?? ''), String(apkPath ?? ''), packageName == null ? undefined : String(packageName)); return { success: true }; } catch (error) { return serializeError(error); }
   });
   ipcMain.handle('adb:uninstall', async (_event, serial: unknown, packageName: unknown) => {
     try { await adbService.uninstall(String(serial ?? ''), String(packageName ?? '')); return { success: true }; } catch (error) { return serializeError(error); }

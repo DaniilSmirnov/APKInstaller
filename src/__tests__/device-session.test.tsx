@@ -27,7 +27,6 @@ describe('useDevices session contract', () => {
 
     await waitFor(() => expect(screen.getByTestId('session-state')).toHaveTextContent('emulator-5554:device'));
     expect(electron.devices.list).toHaveBeenCalledTimes(1);
-    expect(electron.devices.startTracking).toHaveBeenCalledTimes(1);
     expect(electron.devices.onChange).toHaveBeenCalledTimes(1);
   });
 
@@ -48,15 +47,14 @@ describe('useDevices session contract', () => {
     expect(screen.getByTestId('session-state')).not.toHaveTextContent('R58M1234:offline');
   });
 
-  it('unsubscribes and stops tracking on unmount', async () => {
+  it('unsubscribes on unmount while tracking remains owned by main', async () => {
     const unsubscribe = jest.fn();
     electron.devices.onChange.mockReturnValue(unsubscribe);
     const { unmount } = render(<Probe />);
-    await waitFor(() => expect(electron.devices.startTracking).toHaveBeenCalled());
+    await waitFor(() => expect(electron.devices.onChange).toHaveBeenCalled());
 
     unmount();
     expect(unsubscribe).toHaveBeenCalledTimes(1);
-    expect(electron.devices.stopTracking).toHaveBeenCalledTimes(1);
   });
 
   it('surfaces initial list errors', async () => {
@@ -65,4 +63,3 @@ describe('useDevices session contract', () => {
     await waitFor(() => expect(screen.getByTestId('session-state')).toHaveTextContent('error:ADB unavailable'));
   });
 });
-

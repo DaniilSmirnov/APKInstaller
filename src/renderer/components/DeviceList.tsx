@@ -12,9 +12,11 @@ interface DeviceListProps {
   apkSelected?: boolean;
   onInstall?: (serial: string) => void;
   onUninstall?: (serial: string) => void;
+  selectedSerial?: string | null;
+  onSelect?: (serial: string) => void;
 }
 
-const DeviceList = ({ devices = [], packageName = null, packageInfo = {}, packageLoading = {}, busy = {}, messages = {}, apkSelected = false, onInstall = () => undefined, onUninstall = () => undefined }: DeviceListProps): JSX.Element => (
+const DeviceList = ({ devices = [], packageName = null, packageInfo = {}, packageLoading = {}, busy = {}, messages = {}, apkSelected = false, onInstall = () => undefined, onUninstall = () => undefined, selectedSerial = null, onSelect = () => undefined }: DeviceListProps): JSX.Element => (
   devices.length === 0 ? (
     <section className="empty-state" aria-label="ADB devices">
       <h2>Connect an Android device</h2>
@@ -34,6 +36,8 @@ const DeviceList = ({ devices = [], packageName = null, packageInfo = {}, packag
           apkSelected={apkSelected}
           onInstall={() => onInstall(device.serial)}
           onUninstall={() => onUninstall(device.serial)}
+          selected={selectedSerial === device.serial}
+          onSelect={() => onSelect(device.serial)}
         />
       ))}
     </section>

@@ -54,6 +54,7 @@ describe('preload API', () => {
       'adb:install',
       'emulator-5554',
       '/tmp/app.apk',
+      'com.example.app',
     );
     expect(invoke).toHaveBeenNthCalledWith(3, 'adb:uninstall', 'emulator-5554', 'com.example.app');
   });
