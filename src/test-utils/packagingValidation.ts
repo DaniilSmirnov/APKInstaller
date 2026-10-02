@@ -70,7 +70,7 @@ export const validateWorkflowSmoke = (workflowFile: string): WorkflowSmokeResult
   if (!/workflow_dispatch/.test(content) || !/tags:\s*[\s\S]*['"]?v\*/.test(content)) {
     errors.push('workflow must support manual and v* tag triggers');
   }
-  for (const fragment of ['macos-latest', 'windows-latest', 'ubuntu-latest', '--mac dmg', '--linux AppImage deb', '--win nsis', '--x64', '--arm64']) {
+  for (const fragment of ['macos-latest', 'windows-latest', 'ubuntu-latest', '--mac dmg', '--linux AppImage deb', '--win nsis', 'arch: x64', 'arch: arm64', '--${{ matrix.arch }}']) {
     if (!content.includes(fragment)) errors.push(`workflow missing packaging matrix fragment: ${fragment}`);
   }
   if (/teamcity|\.teamcity|jetbrains/i.test(content)) errors.push('workflow must not reference TeamCity');
