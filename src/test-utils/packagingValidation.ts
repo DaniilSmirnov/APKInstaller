@@ -35,7 +35,7 @@ export const validatePackagingConfig = (config: PackagingConfig): string[] => {
   if (!targets.linux.includes('AppImage')) errors.push('Linux target must include AppImage');
   if (!targets.linux.includes('deb')) errors.push('Linux target must include deb');
   if (config.build?.directories?.output !== 'release/build') errors.push('packaging output must be release/build');
-  if (config.build?.artifactName !== '\${productName}-\${version}-\${os}-\${arch}.\${ext}') errors.push('artifactName must include product version, OS and architecture');
+  if (config.build?.artifactName !== '${productName}-${version}-${os}-${arch}.${ext}') errors.push('artifactName must include product version, OS and architecture');
 
   return errors;
 };
@@ -64,14 +64,14 @@ export const validateWorkflowSmoke = (workflowFile: string): WorkflowSmokeResult
   ];
 
   requiredFragments.forEach((fragment) => {
-    if (!fragment.test(content)) errors.push(\`missing workflow fragment: \${fragment}\`);
+    if (!fragment.test(content)) errors.push(`missing workflow fragment: ${fragment}`);
   });
 
   if (!/workflow_dispatch/.test(content) || !/tags:\s*[\s\S]*['"]?v\*/.test(content)) {
     errors.push('workflow must support manual and v* tag triggers');
   }
   for (const fragment of ['macos-latest', 'windows-latest', 'ubuntu-latest', '--mac dmg', '--linux AppImage deb', '--win nsis', '--x64', '--arm64']) {
-    if (!content.includes(fragment)) errors.push(\`workflow missing packaging matrix fragment: \${fragment}\`);
+    if (!content.includes(fragment)) errors.push(`workflow missing packaging matrix fragment: ${fragment}`);
   }
   if (/teamcity|\.teamcity|jetbrains/i.test(content)) errors.push('workflow must not reference TeamCity');
   if (/\t/.test(content)) errors.push('workflow YAML must not contain tab characters');
@@ -90,7 +90,7 @@ export const findTeamCityReferences = (repositoryRoot: string): string[] => {
       const entryPath = path.join(directory, entry.name);
       if (entry.isDirectory()) { visit(entryPath); continue; }
       if (!entry.isFile()) continue;
-      if (ignoredFiles.has(entry.name) || entryPath.includes(\`\${path.sep}src\${path.sep}__tests__\${path.sep}\`) || entryPath.includes(\`\${path.sep}src\${path.sep}test-utils\${path.sep}\`)) continue;
+      if (ignoredFiles.has(entry.name) || entryPath.includes(`${path.sep}src${path.sep}__tests__${path.sep}`) || entryPath.includes(`${path.sep}src${path.sep}test-utils${path.sep}`)) continue;
       const content = fs.readFileSync(entryPath, 'utf8');
       if (/teamcity|\.teamcity|jetbrains/i.test(content)) matches.push(entryPath);
     }

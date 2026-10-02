@@ -11,8 +11,8 @@ permissions:
 
 jobs:
   package:
-    name: \${{ matrix.platform }} \${{ matrix.arch }}
-    runs-on: \${{ matrix.runner }}
+    name: ${{ matrix.platform }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
@@ -35,11 +35,11 @@ jobs:
             builder_args: '--win nsis'
 
     env:
-      CSC_LINK: \${{ secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: \${{ secrets.CSC_KEY_PASSWORD }}
-      APPLE_ID: \${{ secrets.APPLE_ID }}
-      APPLE_APP_SPECIFIC_PASSWORD: \${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-      APPLE_TEAM_ID: \${{ secrets.APPLE_TEAM_ID }}
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
     steps:
       - name: Checkout
@@ -55,11 +55,11 @@ jobs:
         run: npm run build
       - name: Package application
         shell: bash
-        run: npx electron-builder --publish never \${{ matrix.builder_args }} --\${{ matrix.arch }}
+        run: npx electron-builder --publish never ${{ matrix.builder_args }} --${{ matrix.arch }}
       - name: Upload packaged artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: APKInstaller-\${{ matrix.platform }}-\${{ matrix.arch }}-\${{ github.sha }}
+          name: APKInstaller-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
           path: release/build/*
           if-no-files-found: error
           retention-days: 14

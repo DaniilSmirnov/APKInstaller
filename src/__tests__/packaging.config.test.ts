@@ -18,7 +18,7 @@ describe('packaging configuration', () => {
   it('declares installable targets and versioned artifact naming', () => {
     expect(validatePackagingConfig(packageJson)).toEqual([]);
     expect(packageJson.build).toMatchObject({
-      artifactName: '\${productName}-\${version}-\${os}-\${arch}.\${ext}',
+      artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
     });
   });
 
