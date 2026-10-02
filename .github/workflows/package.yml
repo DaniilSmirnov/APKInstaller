@@ -1,0 +1,65 @@
+name: Package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.platform }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos
+            runner: macos-latest
+            arch: x64
+            builder_args: '--mac dmg'
+          - platform: macos
+            runner: macos-latest
+            arch: arm64
+            builder_args: '--mac dmg'
+          - platform: ubuntu
+            runner: ubuntu-latest
+            arch: x64
+            builder_args: '--linux AppImage deb'
+          - platform: windows
+            runner: windows-latest
+            arch: x64
+            builder_args: '--win nsis'
+
+    env:
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build application
+        run: npm run build
+      - name: Package application
+        shell: bash
+        run: npx electron-builder --publish never ${{ matrix.builder_args }} --${{ matrix.arch }}
+      - name: Upload packaged artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: APKInstaller-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
+          path: release/build/*
+          if-no-files-found: error
+          retention-days: 14

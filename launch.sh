@@ -1,2 +1,2 @@
-cd multidevice
+cd code
 python3 main.py

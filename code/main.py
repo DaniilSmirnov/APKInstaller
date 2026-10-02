@@ -2,28 +2,20 @@ import sys
 import traceback
 from threading import Timer
 
-import sentry_sdk
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import QTimer
 
-from database import get_settings, set_settings, getPackages, isOneDevice
+from database import get_settings, set_settings, getPackages
 from filelabel import FileLabel
 from groupbox import DeviceBox, InfoBox, Box
-#from onedevice.onedevice import OneDeviceWidget
 from styles import getIconButton, getButton, settings_icon, app_icon, getLabel, getComboBox
 from utils import getVersionCode, getDevices, adbClient, getSerialsArray
-
-sentry_sdk.init(
-    "https://0cbf9befcec248f3adca4c61df10dccf@o694682.ingest.sentry.io/5775215",
-    traces_sample_rate=1.0
-)
 
 
 class Window(QtWidgets.QWidget):
     current_devices = []
     boxes = {}
     in_settings = False
-    onedevice = False
 
     def setupUi(self):
         MainWindow.resize(520, 200)
@@ -61,19 +53,10 @@ class Window(QtWidgets.QWidget):
 
         self.startAdb()
 
-        if isOneDevice():
-            self.onedevice = True
-            self.drawOneDevice()
-
         self.allInstallButton.clicked.connect(self.allInstall)
         self.openSettingsButton.clicked.connect(self.openSettings)
         self.fileDrop.clicked.connect(self.openFileSelect)
         self.packageSelector.currentTextChanged.connect(self.updateBuildCodes)
-
-    def drawOneDevice(self):
-        devices = getDevices()
-        #self.OneDevice = OneDeviceWidget(ui.centralwidget, devices[0], ui)
-        #self.mainLayout.addWidget(self.OneDevice, 2, 0, 5, 5)
 
     def updateBuildCodes(self):
         try:
@@ -114,7 +97,7 @@ class Window(QtWidgets.QWidget):
 
         applySettingsButton = getButton("Применить")
         self.mainLayout.addWidget(applySettingsButton, 0, 4, 1, 1)
-        applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit, oneDeviceCheckBox))
+        applySettingsButton.clicked.connect(lambda state: saveSettings(packageEdit))
 
         closeSettingsButton = getButton("Назад")
         self.mainLayout.addWidget(closeSettingsButton, 0, 3, 1, 1)
@@ -133,22 +116,12 @@ class Window(QtWidgets.QWidget):
         settingsBox.boxLayout.addWidget(packageInfoLabel)
         settingsBox.boxLayout.addWidget(packageEdit)
 
-        oneDeviceCheckBox = QtWidgets.QCheckBox('Режим одного устройства')
-        if isOneDevice():
-            self.OneDevice.setVisible(False)
-            #self.OneDevice.deleteLater()
-            oneDeviceCheckBox.setChecked(True)
-        else:
-            oneDeviceCheckBox.setChecked(False)
-        settingsBox.boxLayout.addWidget(oneDeviceCheckBox)
-
         self.scrollLayout.addWidget(settingsBox)
 
-        def saveSettings(url, checkbox):
+        def saveSettings(url):
             text = url.text().strip()
-            is_checked = checkbox.isChecked()
             if not text.isspace():
-                Timer(0, set_settings, args=[text, is_checked]).start()
+                Timer(0, set_settings, args=[text]).start()
 
             closeSettings()
 
@@ -156,7 +129,6 @@ class Window(QtWidgets.QWidget):
             applySettingsButton.deleteLater()
             closeSettingsButton.deleteLater()
             settingsBox.deleteLater()
-            self.in_settings = False
 
             self.allInstallButton.setVisible(True)
             self.openSettingsButton.setVisible(True)
@@ -183,8 +155,8 @@ class Window(QtWidgets.QWidget):
     def startAdb(self):
         try:
             adbClient()
-        except Exception as e:
-            self.scrollLayout.addWidget(InfoBox(self.scrollWidget, f'Возникла ошибка при запуске ADB\n{e}'))
+        except Exception:
+            self.scrollLayout.addWidget(InfoBox(self.scrollWidget, 'ADB не может быть запущен'))
 
     def getPath(self):
         return self.fileDrop.text()
@@ -198,8 +170,7 @@ class Window(QtWidgets.QWidget):
                 code.setText(getVersionCode(device, self.getCurrentPackage()))
             except Exception:
                 button.setText('Повторить')
-                trace = traceback.format_exc()
-                sentry_sdk.capture_message(trace)
+                print(traceback.format_exc())
 
         button.setText('Установка')
 
@@ -212,13 +183,12 @@ class Window(QtWidgets.QWidget):
             code.setText(getVersionCode(device, self.getCurrentPackage()))
         except Exception:
             button.setText('Повторить')
-            trace = traceback.format_exc()
-            sentry_sdk.capture_message(trace)
+            print(traceback.format_exc())
 
 
 def checkDevicesActuality():
     try:
-        if not ui.in_settings and not ui.onedevice:
+        if not ui.in_settings:
             connected_devices = getDevices()
             current_devices = ui.current_devices
 
@@ -231,7 +201,6 @@ def checkDevicesActuality():
                     ui.scrollLayout.addWidget(info)
                 else:
                     info.setVisible(True)
-                backgroundBoxCleaner()
 
             if len(connected_devices) > 0:
                 widget = ui.boxes.get('no_devices')
@@ -245,8 +214,7 @@ def checkDevicesActuality():
                             ui.scrollLayout.addWidget(new_device)
                             ui.boxes.update({device.get_serial_no(): new_device})
                     except RuntimeError:
-                        trace = traceback.format_exc()
-                        sentry_sdk.capture_message(trace)
+                        print(traceback.format_exc())
 
                 connected_devices = getSerialsArray(getDevices())
 
@@ -261,14 +229,13 @@ def checkDevicesActuality():
         else:
             return
     except Exception:
-        trace = traceback.format_exc()
-        sentry_sdk.capture_message(trace)
+        print(traceback.format_exc())
 
 
 def backgroundBoxCleaner():
     try:
         for box in ui.boxes:
-            if box != 'no_devices' and not ui.boxes[box].isVisible() and not ui.in_settings:
+            if box != 'no_devices' and not ui.boxes[box].isVisible():
                 ui.boxes[box].deleteLater()
                 ui.boxes.pop(box)
     except RuntimeError:

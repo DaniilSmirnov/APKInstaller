@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QInputDialog
 
 from styles import getButton, getIconButton, settings_icon, getLabel, getCheckBox
 from utils import getDeviceName, getAndroidVersion, getVersionCode, setDPI, resetDPI, getDPI, setScreenSize, \
-    resetScreenSize, getPermissions, setPermission, revokePermission, getScreenSize
+    resetScreenSize, getPermissions, setPermission, revokePermission
 
 
 class Box(QtWidgets.QGroupBox):
@@ -20,20 +20,6 @@ class InfoBox(Box):
         self.boxLayout.addWidget(QtWidgets.QLabel(text))
 
 
-class RichInfoBox(Box):
-    def __init__(self, parent, title, text):
-        super(RichInfoBox, self).__init__(parent)
-        self.setTitle(title)
-        self.textLabel = QtWidgets.QLabel(text)
-        self.boxLayout.addWidget(self.textLabel)
-
-    def setText(self, text):
-        self.textLabel.setText(text)
-
-    def text(self):
-        return self.textLabel.text()
-
-
 class DeviceBox(Box):
     def __init__(self, parent, device, ui):
         super(DeviceBox, self).__init__(parent)
@@ -44,9 +30,9 @@ class DeviceBox(Box):
         self.deviceVersion = QtWidgets.QLabel(getAndroidVersion(self.device))
         self.deviceVersionCode = QtWidgets.QLabel(getVersionCode(self.device, ui.getCurrentPackage()))
 
-        self.deviceVersion.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.deviceName.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.deviceVersion.setTextInteractionFlags(QtCore.Qt.TextInteractionFlags.TextSelectableByMouse)
+        self.deviceName.setTextInteractionFlags(QtCore.Qt.TextInteractionFlags.TextSelectableByMouse)
+        self.deviceVersionCode.setTextInteractionFlags(QtCore.Qt.TextInteractionFlags.TextSelectableByMouse)
 
         self.installButton = getButton("Установить")
         self.deleteButton = getButton("Удалить")
@@ -109,8 +95,7 @@ class DeviceBox(Box):
 
     def screenSize(self):
         text, ok = QInputDialog.getText(self, 'Установка разрешения экрана',
-                                        "Текущее разрешение - " + getScreenSize(
-                                            self.device) + "\nВведите новое разрешение экрана в формате 'Число'x'Число'")
+                                        'Введите новое разрешение экрана:')
         if ok:
             setScreenSize(self.device, text)
         else:

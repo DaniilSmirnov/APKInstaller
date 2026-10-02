@@ -2,25 +2,25 @@ import sqlite3
 
 
 def get_conn():
-    conn = sqlite3.connect('../settings.db')
+    conn = sqlite3.connect('./settings.db')
     return conn, conn.cursor()
 
 
 def create_db():
     conn, cursor = get_conn()
 
-    cursor.execute('CREATE TABLE "settings" ("package" TEXT, "ui_state" INTEGER);')
+    cursor.execute('CREATE TABLE "settings" ("package" TEXT);')
     conn.commit()
 
-    query = 'insert into settings values ("com.android.chrome", 0);'
+    query = 'insert into settings values ("com.android.chrome");'
     cursor.execute(query)
     conn.commit()
 
 
-def set_settings(url, ui_state):
+def set_settings(url):
     conn, cursor = get_conn()
-    query = 'update settings set package = ?, ui_state = ?;'
-    data = (url, ui_state)
+    query = 'update settings set package = ?;'
+    data = (url,)
     cursor.execute(query, data)
     conn.commit()
 
@@ -77,15 +77,3 @@ def getPackages():
         response = raw.split(',')
     return response
 
-
-def isOneDevice():
-    return get_settings().get('ui_state') == 1
-
-
-def addOneDeviceColumn():
-    conn, cursor = get_conn()
-    query = 'alter table settings add ui_state text;'
-    cursor.execute(query)
-    query = 'update settings set onedevice = 0;'
-    cursor.execute(query)
-    conn.commit()

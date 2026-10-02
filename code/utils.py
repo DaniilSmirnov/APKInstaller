@@ -1,4 +1,4 @@
-from subprocess import PIPE, run
+import os
 import re
 
 from ppadb.client import Client as AdbClient
@@ -6,28 +6,20 @@ from ppadb.client import Client as AdbClient
 client = AdbClient(host="127.0.0.1", port=5037)
 
 
-def runAdb():
-    adb_start = run("adb devices", stdout=PIPE, stderr=PIPE, shell=True)
-    return True if adb_start.returncode == 0 else False
-
-
 def resendAdb():
-    global client
-    if runAdb():
-        client = AdbClient(host="127.0.0.1", port=5037)
+    print('resend')
+    os.system("adb devices")
+    client = AdbClient(host="127.0.0.1", port=5037)
     return client
 
 
 def adbClient():
     global client
     try:
-        client.version()
         return client
-    except Exception as e:
-        if runAdb():
-            resendAdb()
-        else:
-            raise Exception(f"Не удалось запустить ADB командой adb devices\n{e}")
+    except Exception:
+        os.system("adb devices")
+        resendAdb()
         return client
 
 
@@ -112,8 +104,7 @@ def resetDPI(device):
 def getScreenSize(device):
     cmd = 'wm size'
     raw = device.shell(cmd).strip()
-    raw = re.findall('([0-9]+)x([0-9]+)', raw)[0]
-    return raw[0] + 'x' + raw[1]
+    return re.findall('([0-9]+)x([0-9]+)', raw)[0]
 
 
 def setScreenSize(device, size):

@@ -1,0 +1,93 @@
+{
+  "name": "apkinstaller",
+  "version": "1.0.0",
+  "description": "Cross-platform Android APK installer desktop application",
+  "main": "dist/main.js",
+  "author": {
+    "name": "Daniil Smirnov",
+    "email": "8039921+DaniilSmirnov@users.noreply.github.com"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "npm run build && electron dist/main.js",
+    "build": "concurrently --kill-others-on-fail \"npm run build:main\" \"npm run build:preload\" \"npm run build:renderer\"",
+    "build:main": "webpack --config config/webpack.main.js --mode production",
+    "build:preload": "webpack --config config/webpack.preload.js --mode production",
+    "build:renderer": "webpack --config config/webpack.renderer.js --mode production",
+    "lint": "eslint src config --ext .js,.ts,.tsx",
+    "test": "jest --runInBand",
+    "typecheck": "tsc --noEmit",
+    "package": "npm run build && electron-builder --publish never"
+  },
+  "dependencies": {
+    "@devicefarmer/adbkit": "^3.2.4",
+    "electron-store": "^10.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "concurrently": "^9.1.2",
+    "css-loader": "^7.1.2",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "eslint": "^8.57.1",
+    "html-webpack-plugin": "^5.6.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^25.0.1",
+    "style-loader": "^4.0.0",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.7.2",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "build": {
+    "appId": "com.daniilsmirnov.apkinstaller",
+    "productName": "APKInstaller",
+    "icon": "assets/icon.png",
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets"
+      }
+    ],
+    "directories": {
+      "output": "release/build",
+      "buildResources": "assets"
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development",
+      "maintainer": "8039921+DaniilSmirnov@users.noreply.github.com"
+    }
+  }
+}
