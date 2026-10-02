@@ -13,6 +13,19 @@
     "es2022": true
   },
   "extends": ["eslint:recommended"],
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "parserOptions": { "project": false }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "no-undef": "off",
+        "no-unused-vars": "off"
+      }
+    }
+  ],
   "rules": {
     "no-console": "off",
     "@typescript-eslint/no-explicit-any": "off"

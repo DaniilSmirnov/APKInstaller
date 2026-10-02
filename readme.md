@@ -13,7 +13,9 @@ This branch introduces the Electron foundation:
 - Jest smoke and contract tests;
 - the original Python implementation remains in the repository temporarily and is not used by the Electron entrypoint.
 
-ADB discovery and APK operations are intentionally deferred to the next migration MR.
+The main process now owns the ADB client, device tracker, device metadata, APK install/uninstall operations, and typed IPC boundary. The React renderer only receives serializable device DTOs and error payloads through the preload API.
+
+ADB must be installed and available on `PATH`. The application connects to the local ADB server on `127.0.0.1:5037`; missing or unavailable ADB is reported as a typed backend error. Devices in `offline`, `unauthorized`, or unknown states remain visible but are not treated as ready for operations.
 
 ## Development
 
@@ -41,7 +43,7 @@ Packaged artifacts are written to `release/build`.
 React renderer
     -> typed preload API
     -> Electron main process
-    -> ADB services (next MR)
+    -> ADB services in the main process
 ```
 
 The renderer has no direct access to Node.js, filesystem, child-process, or ADB APIs.

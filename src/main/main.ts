@@ -1,9 +1,11 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
+import { registerAdbIpc, startAdbTracking, stopAdbTracking } from './adb/ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
 ipcMain.handle('app:get-version', () => app.getVersion());
+registerAdbIpc();
 
 const createWindow = (): void => {
   mainWindow = new BrowserWindow({
@@ -37,11 +39,13 @@ const createWindow = (): void => {
 
 app.whenReady().then(() => {
   createWindow();
+  startAdbTracking();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on('window-all-closed', () => {
+  stopAdbTracking();
   if (process.platform !== 'darwin') app.quit();
 });

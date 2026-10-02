@@ -15,12 +15,12 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\\.tsx?$/,
+        test: /\.tsx?$/,
         exclude: /node_modules/,
         use: 'ts-loader',
       },
       {
-        test: /\\.css$/,
+        test: /\.css$/,
         use: ['style-loader', 'css-loader'],
       },
     ],
