@@ -9,6 +9,7 @@ Object.assign(globalThis, {
 
 Object.defineProperty(window, 'electron', {
   configurable: true,
+  writable: true,
   value: {
     app: {
       getDroppedApkPath: (file: File & { path?: string }): string => file.path ?? '',

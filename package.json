@@ -13,6 +13,7 @@
     "build:renderer": "webpack --config config/webpack.renderer.js --mode production",
     "lint": "eslint src config --ext .js,.ts,.tsx",
     "test": "jest --runInBand",
+    "typecheck": "tsc --noEmit",
     "package": "npm run build && electron-builder --publish never"
   },
   "dependencies": {
