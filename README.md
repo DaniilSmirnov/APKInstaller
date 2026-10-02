@@ -22,7 +22,26 @@ npm run build
 npm run package
 ```
 
-Packaged artifacts are written to `release/build`. Electron is the only application entrypoint; TeamCity is not part of this repository.
+Packaged artifacts are written to `release/build`. The local `npm run package` command builds targets configured for the current host. Explicit local targets should be built only on a matching native runner:
+
+```bash
+npm run build
+npx electron-builder --publish never --mac dmg --x64
+npx electron-builder --publish never --mac dmg --arm64
+npx electron-builder --publish never --linux AppImage deb --x64
+npx electron-builder --publish never --win nsis --x64
+```
+
+Cross-platform release builds run in GitHub Actions from `.github/workflows/package.yml`. Each job uses a native runner; the workflow does not attempt an unsupported cross-build:
+
+| Runner | Architecture | Outputs |
+| --- | --- | --- |
+| macOS | x64 | DMG |
+| macOS | arm64 | DMG |
+| Ubuntu | x64 | AppImage, DEB |
+| Windows | x64 | NSIS installer |
+
+Artifacts are named `APKInstaller-${version}-${os}-${arch}.${ext}`. Code signing and macOS notarization are optional and activated only when the corresponding GitHub secrets are configured. Without those secrets, packages are unsigned. TeamCity is not part of this repository.
 
 ## Features
 
