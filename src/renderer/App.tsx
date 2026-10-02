@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ApkDropZone from './components/ApkDropZone';
 import DeviceList from './components/DeviceList';
 import PackageSelector from './components/PackageSelector';
+import SettingsPanel from './components/SettingsPanel';
 import type { DeviceChange, DeviceInfo, OperationMessage, PackageInfo } from './types';
 
 const errorMessage = (error: unknown): string => error instanceof Error ? error.message : 'Операция не выполнена';
@@ -15,8 +16,10 @@ const App = (): JSX.Element => {
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [messages, setMessages] = useState<Record<string, OperationMessage | undefined>>({});
   const [globalMessage, setGlobalMessage] = useState<OperationMessage | null>(null);
+  const [selectedSerial, setSelectedSerial] = useState<string | null>(null);
   const packageNames = useMemo(() => packageInput.split(',').map((value) => value.trim()).filter(Boolean), [packageInput]);
   const selectedPackage = packageNames[0] ?? null;
+  const saveSettings = async (): Promise<void> => { try { await window.electron.settings.set({ packages: packageNames, selectedPackage: selectedPackage ?? undefined }); setGlobalMessage({ tone: 'success', text: 'Настройки сохранены' }); } catch { setGlobalMessage({ tone: 'error', text: 'Настройки не сохранены' }); } };
 
   const refreshPackageInfo = useCallback(async (nextDevices: DeviceInfo[], packageName: string | null): Promise<void> => {
     if (!packageName) { setPackageInfo({}); return; }
@@ -32,6 +35,7 @@ const App = (): JSX.Element => {
 
   const applyDevices = useCallback((nextDevices: DeviceInfo[]): void => {
     setDevices(nextDevices);
+    setSelectedSerial((current) => current && nextDevices.some((device) => device.serial === current && (device.status === 'device' || device.status === 'emulator')) ? current : (nextDevices.filter((device) => device.status === 'device' || device.status === 'emulator').length === 1 ? nextDevices.find((device) => device.status === 'device' || device.status === 'emulator')?.serial ?? null : null));
     void refreshPackageInfo(nextDevices, selectedPackage);
   }, [refreshPackageInfo, selectedPackage]);
 
@@ -41,7 +45,6 @@ const App = (): JSX.Element => {
       try {
         const initial = await window.electron.devices.list();
         if (active) applyDevices(initial);
-        await window.electron.devices.startTracking();
       } catch (error) { if (active) setGlobalMessage({ tone: 'error', text: errorMessage(error) }); }
     };
     void load();
@@ -52,10 +55,11 @@ const App = (): JSX.Element => {
         if (index === -1) return [...current, change.device];
         return current.map((device, currentIndex) => currentIndex === index ? change.device : device);
       });
+      if (change.type === 'removed' || (change.device.status !== 'device' && change.device.status !== 'emulator')) setSelectedSerial((current) => current === change.device.serial ? null : current);
       if (change.type === 'removed') setPackageInfo((current) => Object.fromEntries(Object.entries(current).filter(([serial]) => serial !== change.device.serial)));
       else if (change.device.status === 'device') void refreshPackageInfo([change.device], selectedPackage);
     });
-    return () => { active = false; unsubscribe(); void window.electron.devices.stopTracking(); };
+    return () => { active = false; unsubscribe(); };
   }, [applyDevices, refreshPackageInfo, selectedPackage]);
 
   useEffect(() => { void refreshPackageInfo(devices, selectedPackage); }, [devices, refreshPackageInfo, selectedPackage]);
@@ -68,6 +72,7 @@ const App = (): JSX.Element => {
   };
   const setOperationMessage = (serial: string, message: OperationMessage): void => setMessages((current) => ({ ...current, [serial]: message }));
   const install = async (serial: string): Promise<void> => {
+    if (selectedSerial !== serial) return;
     if (!apkPath) return;
     setBusy((current) => ({ ...current, [serial]: true })); setOperationMessage(serial, { tone: 'info', text: 'Установка APK…' });
     try { await window.electron.devices.install(serial, apkPath, selectedPackage ?? undefined); setOperationMessage(serial, { tone: 'success', text: 'APK успешно установлен' }); void refreshPackageInfo(devices, selectedPackage); }
@@ -75,6 +80,7 @@ const App = (): JSX.Element => {
     finally { setBusy((current) => ({ ...current, [serial]: false })); }
   };
   const uninstall = async (serial: string): Promise<void> => {
+    if (selectedSerial !== serial) return;
     if (!selectedPackage) return;
     setBusy((current) => ({ ...current, [serial]: true })); setOperationMessage(serial, { tone: 'info', text: 'Удаление приложения…' });
     try { await window.electron.devices.uninstall(serial, selectedPackage); setPackageInfo((current) => ({ ...current, [serial]: null })); setOperationMessage(serial, { tone: 'success', text: 'Приложение удалено' }); }
@@ -89,10 +95,11 @@ const App = (): JSX.Element => {
       <section className="control-panel" aria-label="Установка приложения">
         <ApkDropZone apkPath={apkPath} onSelect={() => void chooseApk()} onDrop={setApkPath} />
         <PackageSelector value={packageInput} onChange={(value) => setPackageInput(typeof value === 'string' ? value : value.join(', '))} />
+        <SettingsPanel value={packageInput} onChange={setPackageInput} onSave={() => void saveSettings()} />
         <button type="button" className="install-all-button" onClick={() => void installAll()} disabled={!apkPath || devices.every((device) => device.status !== 'device')}>Установить на все</button>
       </section>
       {globalMessage && <p className={`global-message global-message--${globalMessage.tone}`} role="alert">{globalMessage.text}</p>}
-      <DeviceList devices={devices} packageName={selectedPackage} packageInfo={packageInfo} packageLoading={packageLoading} busy={busy} messages={messages} apkSelected={Boolean(apkPath)} onInstall={(serial) => void install(serial)} onUninstall={(serial) => void uninstall(serial)} />
+      <DeviceList devices={devices} packageName={selectedPackage} packageInfo={packageInfo} packageLoading={packageLoading} busy={busy} messages={messages} apkSelected={Boolean(apkPath)} selectedSerial={selectedSerial} onSelect={setSelectedSerial} onInstall={(serial) => void install(serial)} onUninstall={(serial) => void uninstall(serial)} />
     </main>
   );
 };

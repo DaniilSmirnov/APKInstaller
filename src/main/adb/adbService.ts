@@ -134,7 +134,7 @@ export class AdbService {
     return withTimeout('getProperties', device.getProperties(), this.operationTimeoutMs);
   }
 
-  async install(serial: string, apkPath: string): Promise<void> {
+  async install(serial: string, apkPath: string, _packageName?: string): Promise<void> {
     if (!path.isAbsolute(apkPath) || !apkPath.trim() || path.extname(apkPath).toLowerCase() !== '.apk') {
       throw new AdbServiceError({ code: 'INVALID_INPUT', message: 'APK path must be an absolute .apk file path', operation: 'install' });
     }
@@ -151,22 +151,31 @@ export class AdbService {
         cause: asMessage(error),
       });
     }
+    await this.assertReady(serial, 'install');
     const device = this.getDevice(serial, 'install');
     await withTimeout('install', device.install(resolvedPath), this.installTimeoutMs);
   }
 
   async uninstall(serial: string, packageName: string): Promise<void> {
     this.validatePackageName(packageName, 'uninstall');
+    await this.assertReady(serial, 'uninstall');
     const device = this.getDevice(serial, 'uninstall');
     await withTimeout('uninstall', device.uninstall(packageName), this.uninstallTimeoutMs);
   }
 
   async getVersionCode(serial: string, packageName: string): Promise<string | null> {
     this.validatePackageName(packageName, 'getVersionCode');
+    await this.assertReady(serial, 'getVersionCode');
     const device = this.getDevice(serial, 'getVersionCode');
     const stream = await withTimeout('getVersionCode', device.shell(`dumpsys package ${packageName}`), this.operationTimeoutMs);
     const output = await withTimeout('getVersionCode.read', this.readStream(stream), this.operationTimeoutMs);
     return parseVersionCode(output);
+  }
+
+  async runShell(serial: string, command: string): Promise<string> {
+    await this.assertReady(serial, 'shell');
+    const stream = await withTimeout('shell', this.getDevice(serial, 'shell').shell(command), this.operationTimeoutMs);
+    return withTimeout('shell.read', this.readStream(stream), this.operationTimeoutMs);
   }
 
   async startTracking(onEvent: (event: AdbDeviceEvent) => void, onError: (error: AdbServiceError) => void): Promise<void> {
@@ -204,6 +213,14 @@ export class AdbService {
   private getDevice(serial: string, operation: string): AdbDeviceClient {
     if (!serial.trim()) throw this.invalidInput(operation, 'Device serial is required');
     return this.client.getDevice(serial);
+  }
+
+  private async assertReady(serial: string, operation: string): Promise<void> {
+    const device = (await this.listDevices()).find((item) => item.serial === serial);
+    if (!device) throw new AdbServiceError({ code: 'DEVICE_NOT_FOUND', message: 'Android device is not connected', operation });
+    if (device.status !== 'device' && device.status !== 'emulator') {
+      throw new AdbServiceError({ code: 'DEVICE_NOT_FOUND', message: 'Android device is not ready', operation });
+    }
   }
 
   private validatePackageName(packageName: string, operation: string): void {
