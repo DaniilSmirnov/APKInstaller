@@ -1,0 +1,38 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  background: #f4f6f8;
+  color: #16202a;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 760px; }
+
+.app-shell { min-height: 100vh; padding: 40px; }
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1000px;
+  margin: 0 auto 28px;
+}
+
+.eyebrow { margin: 0 0 8px; font-size: 12px; letter-spacing: .12em; color: #657383; }
+h1 { margin: 0; font-size: 34px; }
+.status-chip { border-radius: 999px; padding: 8px 12px; background: #e0ebff; color: #2855a6; font-size: 13px; }
+
+.empty-state {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 80px 32px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #dfe5ea;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(22, 32, 42, .08);
+}
+
+.empty-state h2 { margin: 0 0 12px; }
+.empty-state p { margin: 0; color: #657383; }
