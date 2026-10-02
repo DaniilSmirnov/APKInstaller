@@ -3,6 +3,8 @@ name: Package
 on:
   workflow_dispatch:
   push:
+    branches:
+      - dev
     tags:
       - 'v*'
 
@@ -18,11 +20,11 @@ jobs:
       matrix:
         include:
           - platform: macos
-            runner: macos-latest
+            runner: macos-13
             arch: x64
             builder_args: '--mac dmg'
           - platform: macos
-            runner: macos-latest
+            runner: macos-14
             arch: arm64
             builder_args: '--mac dmg'
           - platform: ubuntu
