@@ -3,6 +3,9 @@ name: Package
 on:
   workflow_dispatch:
   push:
+    branches:
+      - dev
+      - master
     tags:
       - 'v*'
 
@@ -35,11 +38,7 @@ jobs:
             builder_args: '--win nsis'
 
     env:
-      CSC_LINK: ${{ secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      HAS_SIGNING: ${{ secrets.CSC_LINK != '' }}
 
     steps:
       - name: Checkout
@@ -53,8 +52,21 @@ jobs:
         run: npm ci
       - name: Build application
         run: npm run build
-      - name: Package application
+      - name: Package application without signing
+        if: env.HAS_SIGNING != 'true'
         shell: bash
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npx electron-builder --publish never ${{ matrix.builder_args }} --${{ matrix.arch }}
+      - name: Package application with signing
+        if: env.HAS_SIGNING == 'true'
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npx electron-builder --publish never ${{ matrix.builder_args }} --${{ matrix.arch }}
       - name: Upload packaged artifacts
         uses: actions/upload-artifact@v4
