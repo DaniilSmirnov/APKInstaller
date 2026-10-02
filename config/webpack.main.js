@@ -10,6 +10,12 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.ts'],
   },
+  // Keep the ADB client as a runtime dependency. Bundling adbkit pulls in
+  // optional protocol helpers and makes the main compilation unnecessarily
+  // large and unreliable. Electron Builder packages production dependencies.
+  externals: {
+    '@devicefarmer/adbkit': 'commonjs2 @devicefarmer/adbkit',
+  },
   module: {
     rules: [
       {
