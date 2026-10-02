@@ -69,6 +69,48 @@ describe('AdbService', () => {
     await expect(service.uninstall('serial-1', 'not a package')).rejects.toMatchObject({ code: 'INVALID_INPUT' });
     expect(getDevice).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['offline', 'offline'],
+    ['unauthorized', 'unauthorized'],
+    ['mystery', 'unknown'],
+  ] as const)('preserves non-ready status %s', async (rawStatus, status) => {
+    const service = new AdbService({
+      client: { ...client(), listDevices: async () => [{ id: 'serial-1', type: rawStatus }] },
+    });
+    await expect(service.listDevices()).resolves.toEqual([{
+      serial: 'serial-1', status, rawStatus, manufacturer: null, model: null, androidVersion: null,
+    }]);
+  });
+
+  it('starts tracking only once and stops the tracker', async () => {
+    const tracker = {
+      on: jest.fn().mockReturnThis(),
+      removeAllListeners: jest.fn().mockReturnThis(),
+      end: jest.fn().mockReturnThis(),
+    };
+    const trackDevices = jest.fn(async () => tracker);
+    const service = new AdbService({ client: { ...client(), trackDevices } });
+    const onEvent = jest.fn();
+    const onError = jest.fn();
+
+    await service.startTracking(onEvent, onError);
+    await service.startTracking(onEvent, onError);
+    service.stopTracking();
+
+    expect(trackDevices).toHaveBeenCalledTimes(1);
+    expect(tracker.removeAllListeners).toHaveBeenCalledTimes(1);
+    expect(tracker.end).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects relative, empty and non-apk paths before contacting ADB', async () => {
+    const getDevice = jest.fn(() => deviceClient());
+    const service = new AdbService({ client: { ...client(), getDevice } });
+
+    await expect(service.install('serial-1', 'relative.apk')).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    await expect(service.install('serial-1', path.join(os.tmpdir(), 'missing.txt'))).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    expect(getDevice).not.toHaveBeenCalled();
+  });
 });
 
 describe('parseVersionCode', () => {
