@@ -1,6 +1,7 @@
 export {};
 
 import type { AdbDeviceEvent, AdbDeviceInfo, AdbErrorPayload, AdbHealth } from '../main/adb/types';
+import type { DeviceChange, DeviceInfo, PackageInfo } from './types';
 
 type AdbApi = {
   health: () => Promise<AdbHealth>;
@@ -17,8 +18,19 @@ declare global {
     electron: {
       app: {
         getVersion: () => Promise<string>;
+        selectApk: () => Promise<string | null>;
+        getDroppedApkPath: (file: File) => string;
       };
       adb: AdbApi;
+      devices: {
+        list: () => Promise<DeviceInfo[]>;
+        startTracking: () => Promise<void>;
+        stopTracking: () => Promise<void>;
+        install: (serial: string, apkPath: string, packageName?: string) => Promise<{ success: true }>;
+        uninstall: (serial: string, packageName: string) => Promise<{ success: true }>;
+        getPackageInfo: (serial: string, packageName: string) => Promise<PackageInfo | null>;
+        onChange: (listener: (change: DeviceChange) => void) => () => void;
+      };
     };
   }
 }

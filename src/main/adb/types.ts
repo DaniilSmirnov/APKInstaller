@@ -7,6 +7,7 @@ export interface AdbDeviceInfo {
   manufacturer: string | null;
   model: string | null;
   androidVersion: string | null;
+  sdkVersion?: number | null;
 }
 
 export type AdbDeviceEventType = 'add' | 'remove' | 'change' | 'end';
