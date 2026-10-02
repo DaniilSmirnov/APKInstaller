@@ -1,10 +1,17 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import { registerAdbIpc, startAdbTracking, stopAdbTracking } from './adb/ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
 ipcMain.handle('app:get-version', () => app.getVersion());
+ipcMain.handle('dialog:open-apk', async (event) => {
+  const owner = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  const result = owner
+    ? await dialog.showOpenDialog(owner, { properties: ['openFile'], filters: [{ name: 'Android package', extensions: ['apk'] }] })
+    : await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'Android package', extensions: ['apk'] }] });
+  return result.canceled ? null : result.filePaths[0] ?? null;
+});
 registerAdbIpc();
 
 const createWindow = (): void => {

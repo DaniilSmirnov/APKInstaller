@@ -13,6 +13,7 @@
     "build:renderer": "webpack --config config/webpack.renderer.js --mode production",
     "lint": "eslint src config --ext .js,.ts,.tsx",
     "test": "jest --runInBand",
+    "typecheck": "tsc --noEmit",
     "package": "npm run build && electron-builder --publish never"
   },
   "dependencies": {
@@ -21,6 +22,8 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.18",
