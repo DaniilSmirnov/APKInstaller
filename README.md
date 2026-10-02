@@ -65,7 +65,9 @@ The renderer does not access Node.js, filesystem, child processes, adbkit, or ar
 
 ## Migration
 
-The legacy Python/PyQt implementation, shell launch scripts, icons and old database file are retained temporarily for compatibility and migration verification. They are not used by the Electron entrypoint and will be removed only in the final cleanup change after feature parity is confirmed.
+The legacy Python/PyQt implementation and shell launch scripts have been removed. APKInstaller now has a single Electron entrypoint and uses npm scripts for development, testing, and packaging.
+
+Existing user settings remain migratable: the Electron settings service can import the legacy `settings.db` format once and creates a `.bak` backup before migration.
 
 For troubleshooting, run `adb devices`, accept the USB debugging prompt on the device, and restart the local ADB server if necessary with `adb kill-server` followed by `adb start-server`.
 
