@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "Cross-platform Android APK installer desktop application",
   "main": "dist/main.js",
-  "author": "Daniil Smirnov",
+  "author": {
+    "name": "Daniil Smirnov",
+    "email": "8039921+DaniilSmirnov@users.noreply.github.com"
+  },
   "license": "MIT",
   "scripts": {
     "start": "npm run build && electron dist/main.js",
@@ -66,6 +69,7 @@
       "output": "release/build",
       "buildResources": "assets"
     },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "mac": {
       "target": [
         "dmg"
@@ -79,9 +83,11 @@
     },
     "linux": {
       "target": [
-        "AppImage"
+        "AppImage",
+        "deb"
       ],
-      "category": "Development"
+      "category": "Development",
+      "maintainer": "8039921+DaniilSmirnov@users.noreply.github.com"
     }
   }
 }
