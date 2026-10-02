@@ -32,14 +32,14 @@ npx electron-builder --publish never --linux AppImage deb --x64
 npx electron-builder --publish never --win nsis --x64
 ```
 
-Cross-platform release builds run in GitHub Actions from `.github/workflows/package.yml`. Each job uses a native runner; the workflow does not attempt an unsupported cross-build:
+Cross-platform release builds run in GitHub Actions from `.github/workflows/package.yml`. The workflow runs for pushes to `dev`, manual dispatches, and version tags matching `v*`. Each job uses a native runner; the workflow does not attempt an unsupported cross-build:
 
 | Runner | Architecture | Outputs |
 | --- | --- | --- |
-| macOS | x64 | DMG |
-| macOS | arm64 | DMG |
-| Ubuntu | x64 | AppImage, DEB |
-| Windows | x64 | NSIS installer |
+| `macos-13` | x64 | DMG |
+| `macos-14` | arm64 | DMG |
+| `ubuntu-latest` | x64 | AppImage, DEB |
+| `windows-latest` | x64 | NSIS installer |
 
 Artifacts are named `APKInstaller-${version}-${os}-${arch}.${ext}`. Code signing and macOS notarization are optional and activated only when the corresponding GitHub secrets are configured. Without those secrets, packages are unsigned. TeamCity is not part of this repository.
 
