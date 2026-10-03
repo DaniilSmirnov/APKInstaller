@@ -9,6 +9,7 @@ import type {
 
 export type DeviceManagerRuntime = DeviceManagerBackend & {
   selectApk: () => Promise<DeviceManagerApkFile | null>;
+  resolveDroppedApk: (file: File) => DeviceManagerApkFile | null;
 };
 
 type NativeBridgeWindow = Window & {
@@ -76,6 +77,7 @@ const createNativeRuntime = (target: NativeBridgeWindow): DeviceManagerRuntime |
   return {
     listDevices,
     selectApk: () => request<DeviceManagerApkFile>('file.select'),
+    resolveDroppedApk: () => null,
     install: (deviceId, apk) => request<void>('device.install', { device: deviceFor(deviceId), fileURL: apk.nativeToken ?? apk.id }),
     uninstall: (deviceId, packageName) => request<void>('device.uninstall', { device: deviceFor(deviceId), packageName }),
     getPackageInfo: async () => null,
@@ -87,6 +89,11 @@ const createNativeRuntime = (target: NativeBridgeWindow): DeviceManagerRuntime |
 const createDesktopRuntime = (target: Window): DeviceManagerRuntime => ({
   listDevices: () => target.deviceManager.listDevices(),
   selectApk: () => target.deviceManager.selectApk(),
+  resolveDroppedApk: (file) => {
+    const electron = (target as Window & { electron?: Window['electron'] }).electron;
+    const nativeToken = electron?.app.getDroppedApkPath(file);
+    return nativeToken ? { id: nativeToken, name: nativeToken.split(/[\\/]/).pop() ?? 'app.apk', size: file.size, nativeToken } : null;
+  },
   install: (deviceId, apk) => target.deviceManager.install(deviceId, apk).then(() => undefined),
   uninstall: (deviceId, packageName) => target.deviceManager.uninstall(deviceId, packageName).then(() => undefined),
   getPackageInfo: (deviceId, packageName) => target.deviceManager.getPackageInfo(deviceId, packageName),
@@ -94,16 +101,42 @@ const createDesktopRuntime = (target: Window): DeviceManagerRuntime => ({
   onError: (listener: (error: DeviceManagerError) => void) => target.deviceManager.onError(listener),
 });
 
+type LegacyDeviceShape = {
+  id?: string;
+  serial: string;
+  status: DeviceManagerDevice['status'];
+  transport?: DeviceManagerDevice['transport'];
+  model: string | null;
+  manufacturer: string | null;
+  androidVersion: string | null;
+  sdkVersion?: number | null;
+};
+
+const toLegacyDeviceManagerDevice = (device: LegacyDeviceShape): DeviceManagerDevice => ({
+  id: device.id ?? device.serial,
+  serial: device.serial,
+  status: device.status,
+  transport: device.transport ?? 'adb-tcp',
+  model: device.model ?? null,
+  manufacturer: device.manufacturer ?? null,
+  androidVersion: device.androidVersion ?? null,
+  sdkVersion: device.sdkVersion ?? null,
+});
+
 const createLegacyRuntime = (target: Window): DeviceManagerRuntime => ({
-  listDevices: async () => target.electron.devices.list() as unknown as DeviceManagerDevice[],
+  listDevices: async () => (await target.electron.devices.list()).map(toLegacyDeviceManagerDevice),
   selectApk: async () => {
     const token = await target.electron.app.selectApk();
     return token ? { id: token, name: token.split(/[\\/]/).pop() ?? 'app.apk', size: 0, nativeToken: token } : null;
   },
+  resolveDroppedApk: (file) => {
+    const nativeToken = target.electron.app.getDroppedApkPath(file);
+    return nativeToken ? { id: nativeToken, name: nativeToken.split(/[\\/]/).pop() ?? 'app.apk', size: file.size, nativeToken } : null;
+  },
   install: (deviceId, apk) => target.electron.devices.install(deviceId, apk.nativeToken ?? apk.id).then(() => undefined),
   uninstall: (deviceId, packageName) => target.electron.devices.uninstall(deviceId, packageName).then(() => undefined),
   getPackageInfo: (deviceId, packageName) => target.electron.devices.getPackageInfo(deviceId, packageName) as Promise<DeviceManagerPackageInfo | null>,
-  onDeviceChange: (listener) => target.electron.devices.onChange(listener as never),
+  onDeviceChange: (listener) => target.electron.devices.onChange((change) => listener({ ...change, device: toLegacyDeviceManagerDevice(change.device) })),
   onError: (listener) => target.electron.adb.onError(listener as never),
 });
 
