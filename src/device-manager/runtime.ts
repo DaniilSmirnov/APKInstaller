@@ -49,7 +49,7 @@ const createNativeRuntime = (target: NativeBridgeWindow): DeviceManagerRuntime |
     return knownDevices;
   };
   const deviceFor = (deviceId: string): DeviceManagerDevice => knownDevices.find((device) => device.id === deviceId) ?? {
-    id: deviceId, serial: deviceId, status: 'unknown', transport: 'wifi-pairing', model: null, manufacturer: null, androidVersion: null, sdkVersion: null,
+    id: deviceId, serial: deviceId, status: 'unknown', transport: 'wifi-pairing', model: null, manufacturer: null, androidVersion: null, sdkVersion: null, host: deviceId, port: 5555,
   };
   const onDeviceChange = (listener: (change: DeviceManagerDeviceChange) => void): (() => void) => {
     let previous = [...knownDevices];

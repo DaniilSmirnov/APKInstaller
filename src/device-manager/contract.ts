@@ -10,6 +10,9 @@ export interface DeviceManagerDevice {
   manufacturer: string | null;
   androidVersion: string | null;
   sdkVersion: number | null;
+  /** Native-only routing fields retained by the WKWebView adapter. */
+  host?: string;
+  port?: number;
 }
 
 export interface DeviceManagerApkFile {
