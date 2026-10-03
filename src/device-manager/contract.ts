@@ -1,4 +1,5 @@
 export type DeviceManagerTransport = 'adb-tcp' | 'adb-tls' | 'wifi-pairing';
+export const DEVICE_MANAGER_CONTRACT_VERSION = 1 as const;
 export type DeviceManagerDeviceStatus = 'device' | 'emulator' | 'offline' | 'unauthorized' | 'unknown';
 
 export interface DeviceManagerDevice {
@@ -10,12 +11,25 @@ export interface DeviceManagerDevice {
   manufacturer: string | null;
   androidVersion: string | null;
   sdkVersion: number | null;
+  /** Native-only routing fields retained by the WKWebView adapter. */
+  host?: string;
+  port?: number;
+  capabilities?: DeviceManagerCapabilities;
+}
+
+export interface DeviceManagerCapabilities {
+  shell: boolean;
+  install: boolean;
+  uninstall: boolean;
+  packageInfo: boolean;
+  pairing: boolean;
 }
 
 export interface DeviceManagerApkFile {
   id: string;
   name: string;
   size: number;
+  /** Opaque native token. It must never contain a filesystem path. */
   nativeToken?: string;
 }
 
@@ -41,6 +55,7 @@ export interface DeviceManagerBackend {
   listDevices(): Promise<DeviceManagerDevice[]>;
   install(deviceId: string, apk: DeviceManagerApkFile): Promise<void>;
   uninstall(deviceId: string, packageName: string): Promise<void>;
+  shell?(deviceId: string, command: string): Promise<{ output: string; exitCode?: number | null }>;
   getPackageInfo(deviceId: string, packageName: string): Promise<DeviceManagerPackageInfo | null>;
   onDeviceChange(listener: (change: DeviceManagerDeviceChange) => void): () => void;
   onError(listener: (error: DeviceManagerError) => void): () => void;

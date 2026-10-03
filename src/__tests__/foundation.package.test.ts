@@ -6,9 +6,9 @@ describe('Electron foundation package', () => {
     fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'),
   );
 
-  it('uses APKInstaller identity without boilerplate publishing', () => {
-    expect(packageJson.build.productName).toBe('APKInstaller');
-    expect(packageJson.build.appId).toBe('com.daniilsmirnov.apkinstaller');
+  it('uses DeviceManager identity without boilerplate publishing', () => {
+    expect(packageJson.build.productName).toBe('DeviceManager');
+    expect(packageJson.build.appId).toBe('com.daniilsmirnov.devicemanager');
     expect(JSON.stringify(packageJson)).not.toContain('ElectronReact');
     expect(packageJson.build.publish).toBeUndefined();
   });

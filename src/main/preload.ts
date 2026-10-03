@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron';
 import type { AdbDeviceEvent, AdbDeviceInfo, AdbErrorPayload, AdbHealth } from './adb/types';
 import type { AndroidPermission, DisplaySettings } from './android/types';
-import type { DeviceManagerApkFile } from '../device-manager/contract';
+import type { DeviceManagerApkFile, DeviceManagerDevice, DeviceManagerDeviceChange } from '../device-manager/contract';
 
 type DeviceEventListener = (event: unknown) => void;
 const renderer = ipcRenderer;
@@ -60,7 +60,16 @@ const electronApi = {
 };
 
 const deviceManagerApi = {
-  listDevices: (): Promise<unknown[]> => electronApi.devices.list(),
+  listDevices: async (): Promise<DeviceManagerDevice[]> => (await electronApi.devices.list()).map((device) => ({
+    id: device.serial,
+    serial: device.serial,
+    status: device.status,
+    transport: 'adb-tcp',
+    model: device.model,
+    manufacturer: device.manufacturer,
+    androidVersion: device.androidVersion,
+    sdkVersion: null,
+  })),
   selectApk: async (): Promise<DeviceManagerApkFile | null> => {
     const nativeToken = await electronApi.app.selectApk();
     if (!nativeToken) return null;
@@ -72,8 +81,11 @@ const deviceManagerApi = {
     electronApi.devices.uninstall(deviceId, packageName),
   getPackageInfo: (deviceId: string, packageName: string) =>
     electronApi.devices.getPackageInfo(deviceId, packageName),
-  onDeviceChange: (listener: DeviceEventListener): (() => void) =>
-    electronApi.devices.onChange(listener as (change: { type: 'added' | 'removed' | 'changed'; device: AdbDeviceInfo }) => void),
+  onDeviceChange: (listener: (change: DeviceManagerDeviceChange) => void): (() => void) =>
+    electronApi.devices.onChange((change) => listener({
+      type: change.type,
+      device: { id: change.device.serial, serial: change.device.serial, status: change.device.status, transport: 'adb-tcp', model: change.device.model, manufacturer: change.device.manufacturer, androidVersion: change.device.androidVersion, sdkVersion: null },
+    })),
   onError: (listener: DeviceEventListener): (() => void) => electronApi.adb.onError(listener),
 };
 contextBridge.exposeInMainWorld('electron', electronApi);

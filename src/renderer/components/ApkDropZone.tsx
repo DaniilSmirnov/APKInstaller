@@ -4,12 +4,13 @@ interface ApkDropZoneProps {
   apkPath: string | null;
   onSelect: () => void;
   onDrop: (path: string) => void;
+  resolveFile?: (file: File) => string | null;
 }
 
-const ApkDropZone = ({ apkPath, onSelect, onDrop }: ApkDropZoneProps): JSX.Element => {
+const ApkDropZone = ({ apkPath, onSelect, onDrop, resolveFile }: ApkDropZoneProps): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
   const accept = (file?: File): void => {
-    const path = file ? window.electron.app.getDroppedApkPath(file) : '';
+    const path = file ? (resolveFile ? resolveFile(file) : window.electron.app.getDroppedApkPath(file)) : '';
     if (!path || !path.toLowerCase().endsWith('.apk')) { setError('Выберите APK-файл'); return; }
     setError(null); onDrop(path);
   };
