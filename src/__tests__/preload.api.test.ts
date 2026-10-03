@@ -18,9 +18,11 @@ describe('preload API', () => {
   it('exposes the typed electron bridge under one global name', async () => {
     await import('../main/preload');
 
-    expect(exposeInMainWorld).toHaveBeenCalledTimes(1);
+    expect(exposeInMainWorld).toHaveBeenCalledTimes(2);
     expect(exposeInMainWorld.mock.calls[0]?.[0]).toBe('electron');
     expect(exposeInMainWorld.mock.calls[0]?.[1]).toBeDefined();
+    expect(exposeInMainWorld.mock.calls[1]?.[0]).toBe('deviceManager');
+    expect(exposeInMainWorld.mock.calls[1]?.[1]).toBeDefined();
   });
 
   it('does not expose generic IPC methods', async () => {
