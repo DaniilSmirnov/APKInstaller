@@ -68,7 +68,28 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npx electron-builder --publish never ${{ matrix.builder_args }} --${{ matrix.arch }}
+      - name: Validate macOS app bundle
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          app_path="$(find release/build -type d -name 'APKInstaller.app' -print -quit)"
+          test -n "$app_path"
+          test -x "$app_path/Contents/MacOS/APKInstaller"
+          test -s "$app_path/Contents/Resources/app.asar"
+          test -f release/build/*.dmg
+      - name: Upload macOS DMG artifacts
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: APKInstaller-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
+          path: |
+            release/build/*.dmg
+            release/build/*.dmg.blockmap
+            release/build/latest-mac.yml
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload packaged artifacts
+        if: matrix.platform != 'macos'
         uses: actions/upload-artifact@v4
         with:
           name: APKInstaller-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
