@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron';
 import type { AdbDeviceEvent, AdbDeviceInfo, AdbErrorPayload, AdbHealth } from './adb/types';
 import type { AndroidPermission, DisplaySettings } from './android/types';
+import type { DeviceManagerApkFile } from '../device-manager/contract';
 
 type DeviceEventListener = (event: unknown) => void;
 const renderer = ipcRenderer;
@@ -58,4 +59,22 @@ const electronApi = {
   },
 };
 
+const deviceManagerApi = {
+  listDevices: (): Promise<unknown[]> => electronApi.devices.list(),
+  selectApk: async (): Promise<DeviceManagerApkFile | null> => {
+    const nativeToken = await electronApi.app.selectApk();
+    if (!nativeToken) return null;
+    return { id: nativeToken, name: nativeToken.split(/[\\/]/).pop() ?? 'app.apk', size: 0, nativeToken };
+  },
+  install: (deviceId: string, apk: DeviceManagerApkFile): Promise<{ success: true }> =>
+    electronApi.devices.install(deviceId, apk.nativeToken ?? apk.id),
+  uninstall: (deviceId: string, packageName: string): Promise<{ success: true }> =>
+    electronApi.devices.uninstall(deviceId, packageName),
+  getPackageInfo: (deviceId: string, packageName: string) =>
+    electronApi.devices.getPackageInfo(deviceId, packageName),
+  onDeviceChange: (listener: DeviceEventListener): (() => void) =>
+    electronApi.devices.onChange(listener as (change: { type: 'added' | 'removed' | 'changed'; device: AdbDeviceInfo }) => void),
+  onError: (listener: DeviceEventListener): (() => void) => electronApi.adb.onError(listener),
+};
 contextBridge.exposeInMainWorld('electron', electronApi);
+contextBridge.exposeInMainWorld('deviceManager', deviceManagerApi);
