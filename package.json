@@ -1,7 +1,7 @@
 {
   "name": "apkinstaller",
   "version": "1.0.0",
-  "description": "Cross-platform Android APK installer desktop application",
+  "description": "Cross-platform Android device manager desktop and iOS UI contract",
   "main": "dist/main.js",
   "author": {
     "name": "Daniil Smirnov",
@@ -51,8 +51,8 @@
     "webpack-cli": "^6.0.1"
   },
   "build": {
-    "appId": "com.daniilsmirnov.apkinstaller",
-    "productName": "APKInstaller",
+    "appId": "com.daniilsmirnov.devicemanager",
+    "productName": "DeviceManager",
     "icon": "assets/icon.png",
     "asar": true,
     "files": [

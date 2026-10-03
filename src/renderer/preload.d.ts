@@ -44,3 +44,18 @@ declare global {
     };
   }
 }
+
+
+declare global {
+  interface Window {
+    deviceManager: {
+      listDevices: () => Promise<import('../device-manager/contract').DeviceManagerDevice[]>;
+      selectApk: () => Promise<import('../device-manager/contract').DeviceManagerApkFile | null>;
+      install: (deviceId: string, apk: import('../device-manager/contract').DeviceManagerApkFile) => Promise<{ success: true }>;
+      uninstall: (deviceId: string, packageName: string) => Promise<{ success: true }>;
+      getPackageInfo: (deviceId: string, packageName: string) => Promise<import('../device-manager/contract').DeviceManagerPackageInfo | null>;
+      onDeviceChange: (listener: (change: import('../device-manager/contract').DeviceManagerDeviceChange) => void) => () => void;
+      onError: (listener: (error: import('../device-manager/contract').DeviceManagerError) => void) => () => void;
+    };
+  }
+}
