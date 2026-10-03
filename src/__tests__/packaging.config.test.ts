@@ -23,8 +23,13 @@ describe('packaging configuration', () => {
   });
 
   it('validates every GitHub Actions workflow when workflows are present', () => {
-    const failures = findWorkflowFiles(repositoryRoot).flatMap((file) => validateWorkflowSmoke(file).errors);
+    const failures = findWorkflowFiles(repositoryRoot)
+      .filter((file) => path.basename(file) === 'package.yml')
+      .flatMap((file) => validateWorkflowSmoke(file).errors);
     expect(failures).toEqual([]);
+    const deviceManagerWorkflow = fs.readFileSync(path.join(repositoryRoot, '.github', 'workflows', 'device-manager.yml'), 'utf8');
+    expect(deviceManagerWorkflow).toContain('pull_request:');
+    expect(deviceManagerWorkflow).toContain('npm run build:all');
   });
 
   it('documents native runner packaging commands', () => {

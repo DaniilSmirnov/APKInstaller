@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build application
-        run: npm run build
+        run: npm run build:all
       - name: Package application without signing
         if: env.HAS_SIGNING != 'true'
         shell: bash
@@ -94,5 +94,31 @@ jobs:
         with:
           name: APKInstaller-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
           path: release/build/*
+          if-no-files-found: error
+          retention-days: 14
+
+  device-manager-ui:
+    name: DeviceManager UI bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build external DeviceManager UI artifact
+        run: npm run build:device-manager-ui
+      - name: Validate UI artifact contract
+        shell: bash
+        run: test -s dist/DeviceManagerUI/index.html && test -s dist/DeviceManagerUI/device-manager.js
+      - name: Upload DeviceManager UI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeviceManagerUI-${{ github.sha }}
+          path: dist/DeviceManagerUI
           if-no-files-found: error
           retention-days: 14

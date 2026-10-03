@@ -14,10 +14,12 @@
     "build:main": "webpack --config config/webpack.main.js --mode production",
     "build:preload": "webpack --config config/webpack.preload.js --mode production",
     "build:renderer": "webpack --config config/webpack.renderer.js --mode production",
+    "build:device-manager-ui": "webpack --config config/webpack.device-manager.js --mode production",
+    "build:all": "npm run build && npm run build:device-manager-ui",
     "lint": "eslint src config --ext .js,.ts,.tsx",
     "test": "jest --runInBand",
     "typecheck": "tsc --noEmit",
-    "package": "npm run build && electron-builder --publish never"
+    "package": "npm run build:all && electron-builder --publish never"
   },
   "dependencies": {
     "@devicefarmer/adbkit": "^3.2.4",
