@@ -13,9 +13,10 @@ module.exports = {
   // Keep the ADB client as a runtime dependency. Bundling adbkit pulls in
   // optional protocol helpers and makes the main compilation unnecessarily
   // large and unreliable. Electron Builder packages production dependencies.
+  // electron-store is ESM-only, so it must be bundled: a runtime require()
+  // of it throws ERR_REQUIRE_ESM and the app fails to start.
   externals: {
     '@devicefarmer/adbkit': 'commonjs2 @devicefarmer/adbkit',
-    'electron-store': 'commonjs2 electron-store',
   },
   module: {
     rules: [

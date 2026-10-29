@@ -22,6 +22,15 @@ describe('packaging configuration', () => {
     });
   });
 
+  it('bundles ESM-only main-process dependencies instead of requiring them at runtime', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mainConfig = require(path.join(repositoryRoot, 'config', 'webpack.main.js')) as { externals?: Record<string, string> };
+    for (const dependency of Object.keys(mainConfig.externals ?? {})) {
+      const manifest = JSON.parse(fs.readFileSync(path.join(repositoryRoot, 'node_modules', dependency, 'package.json'), 'utf8')) as { type?: string };
+      expect({ dependency, type: manifest.type }).not.toEqual({ dependency, type: 'module' });
+    }
+  });
+
   it('validates every GitHub Actions workflow when workflows are present', () => {
     const failures = findWorkflowFiles(repositoryRoot)
       .filter((file) => path.basename(file) === 'package.yml')
